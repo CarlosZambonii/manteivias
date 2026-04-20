@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, KeyRound, Megaphone } from 'lucide-react';
+import { LogOut, KeyRound, Bell, FileText, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,9 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ChangePasswordDialog from './ChangePasswordDialog';
-import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import LanguageSelector from '@/components/LanguageSelector';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useCentralNotifications } from '@/hooks/useCentralNotifications';
 
 const Header = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -18,6 +18,7 @@ const Header = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const { items: centralItems, unreadCount, markSeen } = useCentralNotifications();
 
   const handleLogout = () => {
     logout();
@@ -67,18 +68,67 @@ const Header = () => {
             
             <LanguageSelector />
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => navigate('/updates')}>
-                    <Megaphone className="h-5 w-5 text-foreground/80 hover:text-foreground transition-colors" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Central de Atualizações</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DropdownMenu onOpenChange={(open) => { if (open) markSeen(); }}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5 text-foreground/80 hover:text-foreground transition-colors" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-background">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80" align="end">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Atualizações</span>
+                  {unreadCount > 0 && (
+                    <span className="text-xs font-normal px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400">
+                      {unreadCount} nova{unreadCount > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {centralItems.length === 0 ? (
+                  <div className="px-3 py-4 text-sm text-muted-foreground text-center">
+                    Nenhum item ainda.
+                  </div>
+                ) : (
+                  centralItems.slice(0, 5).map(item => (
+                    <DropdownMenuItem
+                      key={item.id}
+                      className="flex items-start gap-2.5 px-3 py-2.5 cursor-pointer"
+                      onSelect={() => navigate('/updates')}
+                    >
+                      <div className={`mt-0.5 flex-shrink-0 w-7 h-7 rounded-md ${item.meta.bg} flex items-center justify-center`}>
+                        <FileText className={`w-3.5 h-3.5 ${item.meta.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[10px] font-semibold ${item.meta.color}`}>{item.meta.label}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{item.code}</span>
+                        </div>
+                        <p className="text-sm font-medium leading-tight truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.date}</p>
+                      </div>
+                      {item.isNew && (
+                        <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500" />
+                      )}
+                    </DropdownMenuItem>
+                  ))
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-primary cursor-pointer"
+                  onSelect={() => navigate('/updates')}
+                >
+                  Acessar Central de Atualizações
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <div className="text-right hidden sm:block">
               <p className="font-semibold text-foreground">{user.nome}</p>

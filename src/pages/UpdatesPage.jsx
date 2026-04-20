@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import StatCard from '@/components/alertas/StatCard';
 import TicketCard from '@/components/alertas/TicketCard';
 import UpdateCard from '@/components/alertas/UpdateCard';
@@ -9,25 +9,54 @@ import FilterBar from '@/components/alertas/FilterBar';
 import ActionButtons from '@/components/alertas/ActionButtons';
 import TicketDetailModal from '@/components/alertas/TicketDetailModal';
 import FormModal from '@/components/alertas/FormModal';
-import { stats, tickets, updates, tabs } from '@/components/alertas/mockData';
+import { tabs } from '@/components/alertas/mockData';
+import { useAlertas } from '@/hooks/useAlertas';
 
 const UpdatesPage = () => {
   const navigate = useNavigate();
+  const { tickets, updates, stats, loading, addTicket, deleteTicket, addUpdate, deleteUpdate } = useAlertas();
+
   const [activeTab, setActiveTab] = useState('atualizacoes');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [openForm, setOpenForm] = useState(null);
+  const [filters, setFilters] = useState({ search: '', tipo: '', estado: '', prioridade: '', modulo: '' });
 
-  const visibleTickets = () => {
-    switch (activeTab) {
-      case 'ajuda':     return tickets.filter(t => t.type === 'Ajuda');
-      case 'melhorias': return tickets.filter(t => t.type === 'Melhoria');
-      case 'erros':     return tickets.filter(t => t.type === 'Erro');
-      case 'futuro':    return tickets.filter(t => t.status === 'Planeado');
-      default:          return tickets;
+  const handleSubmit = (formData) => {
+    if (openForm === 'atualizacao') {
+      addUpdate(formData);
+    } else {
+      addTicket(formData, openForm);
     }
   };
 
-  const list = visibleTickets();
+  const visibleList = () => {
+    let list = tickets;
+
+    switch (activeTab) {
+      case 'ajuda':     list = list.filter(t => t.type === 'Ajuda');     break;
+      case 'melhorias': list = list.filter(t => t.type === 'Melhoria');  break;
+      case 'erros':     list = list.filter(t => t.type === 'Erro');      break;
+      case 'futuro':    list = list.filter(t => t.status === 'Planeado'); break;
+      default: break;
+    }
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.code.toLowerCase().includes(q)
+      );
+    }
+    if (filters.tipo)       list = list.filter(t => t.type === filters.tipo);
+    if (filters.estado)     list = list.filter(t => t.status === filters.estado);
+    if (filters.prioridade) list = list.filter(t => t.priority === filters.prioridade);
+    if (filters.modulo)     list = list.filter(t => t.module === filters.modulo);
+
+    return list;
+  };
+
+  const list = visibleList();
 
   return (
     <>
@@ -63,15 +92,15 @@ const UpdatesPage = () => {
           </div>
 
           <div className="mb-5">
-            <FilterBar />
+            <FilterBar filters={filters} onChange={setFilters} />
           </div>
 
-          <div className="flex rounded-xl border border-[#1e2a3a] bg-[#0b1525] p-1 gap-0.5 mb-5 overflow-x-auto">
+          <div className="flex rounded-xl border border-[#1e2a3a] bg-[#0b1525] p-1 gap-0.5 mb-5 overflow-x-auto scrollbar-none">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setActiveTab(t.key)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-150 flex-1 justify-center
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-150 sm:flex-1 justify-center
                   ${activeTab === t.key
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-900/40'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -94,11 +123,17 @@ const UpdatesPage = () => {
           )}
 
           <div className="space-y-3">
-            {activeTab === 'atualizacoes' ? (
-              updates.map((u) => <UpdateCard key={u.title} update={u} />)
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
+              </div>
+            ) : activeTab === 'atualizacoes' ? (
+              updates.length > 0
+                ? updates.map((u) => <UpdateCard key={u.id} update={u} onDelete={deleteUpdate} />)
+                : <div className="text-center py-16"><p className="text-slate-500 text-sm">Nenhuma atualização registada.</p></div>
             ) : list.length > 0 ? (
               list.map((t) => (
-                <TicketCard key={t.code} ticket={t} onOpen={() => setSelectedTicket(t)} />
+                <TicketCard key={t.id} ticket={t} onOpen={() => setSelectedTicket(t)} onDelete={deleteTicket} />
               ))
             ) : (
               <div className="text-center py-16">
@@ -113,7 +148,7 @@ const UpdatesPage = () => {
         </div>
 
         <TicketDetailModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
-        <FormModal type={openForm} onClose={() => setOpenForm(null)} />
+        <FormModal type={openForm} onClose={() => setOpenForm(null)} onSubmit={handleSubmit} />
       </div>
     </>
   );

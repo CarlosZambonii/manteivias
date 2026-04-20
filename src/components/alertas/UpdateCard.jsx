@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pencil, Trash2, FileText } from 'lucide-react';
 
-export default function UpdateCard({ update }) {
+export default function UpdateCard({ update, onDelete }) {
   return (
     <div className="group rounded-xl border border-[#1e2a3a] bg-[#0f1b2d] p-5 hover:border-blue-500/30 transition-all duration-200">
       <div className="flex items-start justify-between gap-4">
@@ -22,11 +22,12 @@ export default function UpdateCard({ update }) {
             </ul>
           </div>
         </div>
-        <div className="flex items-center gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          <button className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-blue-300 transition-colors" title="Editar">
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-red-400 transition-colors" title="Eliminar">
+        <div className="flex items-center gap-0.5 opacity-100 sm:opacity-40 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <button
+            onClick={() => onDelete?.(update.id)}
+            className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-red-400 transition-colors"
+            title="Eliminar"
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>

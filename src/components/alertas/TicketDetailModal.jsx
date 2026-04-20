@@ -29,7 +29,7 @@ export default function TicketDetailModal({ ticket, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-[#1e2a3a]">
+        <div className="flex items-start justify-between p-4 sm:p-6 border-b border-[#1e2a3a]">
           <div>
             <p className="text-[11px] font-mono text-slate-500 tracking-widest mb-1">{ticket.code}</p>
             <h2 className="text-lg font-semibold text-white">{ticket.title}</h2>
@@ -45,12 +45,12 @@ export default function TicketDetailModal({ ticket, onClose }) {
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto max-h-[calc(90vh-100px)] p-6 space-y-6">
+        <div className="overflow-y-auto max-h-[calc(90vh-100px)] p-4 sm:p-6 space-y-6">
 
           {/* Info geral */}
           <section>
             <p className="text-[11px] uppercase tracking-wider text-slate-500 font-medium mb-2">Informação geral</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { label: "Data", value: ticket.date },
                 { label: "Módulo", value: ticket.module },
