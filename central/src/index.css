@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 7%;
+    --foreground: 210 40% 98%;
+    --card: 222 40% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 40% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 231 77% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 35% 14%;
+    --secondary-foreground: 210 40% 90%;
+    --muted: 222 35% 14%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 231 77% 63%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 30% 18%;
+    --input: 222 30% 16%;
+    --ring: 231 77% 63%;
+    --chart-1: 231 77% 63%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+    /* Manteivias brand */
+    --brand-blue: 231 77% 63%;
+    --brand-navy: 222 47% 7%;
+    --brand-card: 222 38% 11%;
+    --brand-border: 222 28% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
