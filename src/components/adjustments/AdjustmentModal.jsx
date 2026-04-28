@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import TimePicker from '@/components/TimePicker';
 import { Combobox } from '@/components/ui/combobox';
 import { formatObraOption } from '@/utils/formatObraDisplay';
+import { logAcao } from '@/lib/logService';
 
 const AdjustmentModal = ({ isOpen, setIsOpen, item, onSave }) => {
   const { user } = useAuth();
@@ -128,10 +129,17 @@ const AdjustmentModal = ({ isOpen, setIsOpen, item, onSave }) => {
             }
         }
 
-        toast({ 
-            variant: 'success', 
-            title: 'Sucesso!', 
-            description: 'O seu pedido de correção foi enviado para validação.' 
+        logAcao(user, {
+            acao: 'Correção',
+            entidade: 'Registo de Ponto',
+            modulo: 'Ajustamentos',
+            descricao: 'Pedido de correção submetido',
+            obraId: correctionData.obra_id ? Number(correctionData.obra_id) : null,
+        });
+        toast({
+            variant: 'success',
+            title: 'Sucesso!',
+            description: 'O seu pedido de correção foi enviado para validação.'
         });
         onSave();
     } catch (error) {

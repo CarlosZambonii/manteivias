@@ -11,6 +11,7 @@ import { calculateDistance } from '@/utils/calculateDistance';
 import { useLocationPermission } from '@/hooks/useLocationPermission';
 import LocationPermissionDialog from '@/components/clock/LocationPermissionDialog';
 import { useLanguage } from '@/hooks/useLanguage';
+import { logAcao } from '@/lib/logService';
 import TimeComparisonCard from './TimeComparisonCard';
 import { isValidTimeSlot, validateManualClose } from '@/utils/shiftTimeZoneLogic';
 import { generateCascadingRecords } from '@/utils/recordCascadeLogic';
@@ -209,6 +210,13 @@ const ClockOutForm = () => {
       if (insertError) throw new Error("Error inserting cascade records: " + insertError.message);
 
       clockOut();
+      logAcao(user, {
+        acao: 'Edição',
+        entidade: 'Registo de Ponto',
+        modulo: 'Ponto',
+        descricao: 'Saída registada',
+        obraId: activeRecord?.obra_id ? Number(activeRecord.obra_id) : null,
+      });
       setSessionActive(false);
       
       // Removed success toast and SW success message as per request

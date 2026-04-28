@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { logAcao } from '@/lib/logService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,6 +127,13 @@ const MonthlyClockInPage = () => {
 
         if (error) throw error;
 
+        logAcao(user, {
+            acao: 'Criação',
+            entidade: 'Registo Mensal',
+            modulo: 'Ponto',
+            descricao: `Registo mensal submetido`,
+            obraId: recordsToInsert[0]?.obra_id ?? null,
+        });
         toast({ variant: 'success', title: 'Sucesso!', description: 'O seu registo mensal foi submetido e aguarda aprovação.' });
         navigate('/');
     } catch(error) {

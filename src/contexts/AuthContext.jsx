@@ -3,6 +3,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/customSupabaseClient';
 import { useOfflineManager } from '@/contexts/OfflineManager';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions'; // Import the new hook
+import { logAcesso } from '@/lib/logService';
 
 const AuthContext = createContext(null);
 
@@ -130,7 +131,8 @@ export const AuthProvider = ({ children }) => {
       }
       
       fetchAndSetUser(userProfile);
-      
+      logAcesso(userProfile);
+
       if (offlineManager?.syncAll) {
           offlineManager.syncAll().catch(console.warn);
       }

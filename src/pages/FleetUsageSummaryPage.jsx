@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAcao } from '@/lib/logService';
 
 const SummaryItem = ({ label, value, children }) => (
   <div className="flex justify-between items-center py-3 border-b border-border/50">
@@ -128,6 +129,13 @@ const FleetUsageSummaryPage = () => {
       });
       setIsSubmitting(false);
     } else {
+      logAcao(user, {
+        acao: 'Criação',
+        entidade: 'Utilização de Frota',
+        modulo: 'Frotas',
+        descricao: 'Utilização de equipamento registada',
+        obraId: worksite ? Number(worksite) : null,
+      });
       toast({
         title: "Registo Concluído!",
         description: "A utilização do equipamento foi registada com sucesso.",

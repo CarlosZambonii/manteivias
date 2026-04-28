@@ -12,6 +12,7 @@ import { useLocationPermission } from '@/hooks/useLocationPermission';
 import LocationPermissionDialog from '@/components/clock/LocationPermissionDialog';
 import { useLanguage } from '@/hooks/useLanguage';
 import { formatObraOption } from '@/utils/formatObraDisplay';
+import { logAcao } from '@/lib/logService';
 import TimeComparisonCard from './TimeComparisonCard';
 import { isValidTimeSlot, getShiftZone } from '@/utils/shiftTimeZoneLogic';
 
@@ -203,8 +204,15 @@ const ClockInForm = () => {
 
       const mainRecord = insertedRecords[0];
       const worksiteName = worksites.find(w => w.value === selectedWorksite)?.label;
-      
+
       clockIn(mainRecord.turno, worksiteName, selectedTime, mainRecord.id);
+      logAcao(user, {
+        acao: 'Criação',
+        entidade: 'Registo de Ponto',
+        modulo: 'Ponto',
+        descricao: `Entrada às ${selectedTime}${worksiteName ? ` — ${worksiteName}` : ''}`,
+        obraId: selectedWorksite ? Number(selectedWorksite) : null,
+      });
       setSessionActive(false); 
       
       // Removed success toast and SW success message as per request

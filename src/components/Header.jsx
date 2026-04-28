@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, KeyRound, Bell, FileText, ArrowRight } from 'lucide-react';
+import { LogOut, KeyRound, Bell, FileText, ArrowRight, ScrollText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCentralNotifications } from '@/hooks/useCentralNotifications';
 
 const Header = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isAdminStar } = useAuth();
   const { hasPermission } = useAdminPermissions();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -162,7 +162,13 @@ const Header = () => {
                 {canViewFleets && <DropdownMenuItem onSelect={() => navigate('/admin/frotas')}>Frotas</DropdownMenuItem>}
                 {canViewOrganizational && <DropdownMenuItem onSelect={() => navigate('/admin/organizacional')}>Organizacional</DropdownMenuItem>}
                 {canViewDataAnalysis && <DropdownMenuItem onSelect={() => navigate('/admin/analise-dados')}>Análise de Dados</DropdownMenuItem>}
-                {(canViewValidations || canViewFleets || canViewOrganizational || canViewDataAnalysis) && <DropdownMenuSeparator />}
+                {isAdminStar && (
+                  <DropdownMenuItem onSelect={() => navigate('/admin/logs')} className="gap-2">
+                    <ScrollText className="w-4 h-4" />
+                    Central de Logs
+                  </DropdownMenuItem>
+                )}
+                {(canViewValidations || canViewFleets || canViewOrganizational || canViewDataAnalysis || isAdminStar) && <DropdownMenuSeparator />}
                 <DropdownMenuItem onSelect={() => setIsChangePasswordOpen(true)}>
                   <KeyRound className="mr-2 h-4 w-4" />
                   <span>{t('auth.changePassword')}</span>

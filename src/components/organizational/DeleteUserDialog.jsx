@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { logAcao } from '@/lib/logService';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 const DeleteUserDialog = ({ open, onOpenChange, user, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
 
   const hasRelatedRecords = async (userId) => {
     const tablesToCheck = [
@@ -75,6 +78,12 @@ const DeleteUserDialog = ({ open, onOpenChange, user, onSuccess }) => {
         description: error.message,
       });
     } else {
+      logAcao(currentUser, {
+        acao: 'Exclusão',
+        entidade: 'Utilizador',
+        modulo: 'Organizacional',
+        descricao: `Utilizador "${user.nome}" eliminado`,
+      });
       toast({
         variant: 'success',
         title: 'Sucesso!',

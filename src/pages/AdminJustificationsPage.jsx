@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { logAcao } from '@/lib/logService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -127,14 +128,21 @@ const AdminJustificationsPage = () => {
           .eq('id', justification.id);
 
       if (error) throw error;
-      
+
+      logAcao(user, {
+          acao: 'Edição',
+          entidade: 'Justificação',
+          modulo: 'Justificações',
+          descricao: `Justificação ${status === 'Aprovado' ? 'aprovada' : 'rejeitada'}`,
+      });
+
       // Optimistic update
-      setJustifications(prev => prev.map(j => 
+      setJustifications(prev => prev.map(j =>
           j.id === justification.id ? { ...j, ...updateData } : j
       ));
 
-      toast({ 
-          variant: 'success', 
+      toast({
+          variant: 'success',
           title: status === 'Aprovado' ? 'Justificação Aprovada' : 'Justificação Rejeitada',
           description: status === 'Rejeitado' ? 'O colaborador será notificado.' : null
       });

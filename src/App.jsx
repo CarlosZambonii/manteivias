@@ -38,6 +38,7 @@ import AdminUserDeletionPage from '@/pages/AdminUserDeletionPage';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useNotifications } from '@/contexts/NotificationContext';
 import TestPanelPage from '@/pages/TestPanelPage';
+import CentralDeLogsPage from '@/pages/CentralDeLogsPage';
 import useHubspotTracking from '@/hooks/useHubspotTracking.js';
 
 const LoadingScreen = () => {
@@ -133,6 +134,7 @@ const AppRoutes = () => {
         
         {isAdminStar && (
           <>
+            <Route path="/admin/logs" element={<CentralDeLogsPage />} />
             <Route path="/admin/frotas" element={<FleetManagementPage />} />
             <Route path="/admin/frotas/registar" element={<RegisterFleetUsagePage />} />
             <Route path="/admin/frotas/guia" element={<FleetUsageGuidePage />} />

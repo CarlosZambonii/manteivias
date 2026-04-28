@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAcao } from '@/lib/logService';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -22,8 +23,14 @@ const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
 
       if (error) throw error;
 
+      logAcao(user, {
+        acao: 'Edição',
+        entidade: 'Correção de Ponto',
+        modulo: 'Validações',
+        descricao: `Correção ${status === 'Aprovado' ? 'aprovada' : 'rejeitada'}`,
+      });
       toast({
-        variant: status === 'Aprovado' ? 'success' : 'default', // Using default for rejection as per some designs, or destructive
+        variant: status === 'Aprovado' ? 'success' : 'default',
         title: status === 'Aprovado' ? 'Aprovado' : 'Rejeitado',
         description: `A correção foi ${status === 'Aprovado' ? 'aprovada' : 'rejeitada'} com sucesso.`,
       });

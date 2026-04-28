@@ -26,6 +26,7 @@ import DeleteUserDialog from '@/components/organizational/DeleteUserDialog';
 import AddSubcontractorDialog from '@/components/organizational/AddSubcontractorDialog';
 import SubcontractorWorksAssignmentDialog from '@/components/organizational/SubcontractorWorksAssignmentDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAcao } from '@/lib/logService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,7 @@ import {
 
 const SubcontractorDataTable = () => {
   const { toast } = useToast();
-  const { isReadOnlyAdmin } = useAuth();
+  const { user, isReadOnlyAdmin } = useAuth();
   const [subcontractors, setSubcontractors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [allCompanies, setAllCompanies] = useState([]);
@@ -150,6 +151,12 @@ const SubcontractorDataTable = () => {
 
         if (error) throw error;
 
+        logAcao(user, {
+            acao: 'Edição',
+            entidade: 'Subempreiteiro',
+            modulo: 'Organizacional',
+            descricao: `${sub.nome} — estado alterado para ${newStatus}`,
+        });
         toast({
             title: `Status atualizado`,
             description: `Subempreiteiro ${sub.nome} está agora ${newStatus}.`,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAcao } from '@/lib/logService';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -139,6 +140,13 @@ const CorrectionModal = ({ isOpen, onOpenChange, item, onCorrectionSubmitted }) 
 
       const { error } = await supabase.from('correcoes_ponto').insert(correctionData);
       if (error) throw error;
+      logAcao(user, {
+        acao: 'Correção',
+        entidade: 'Registo de Ponto',
+        modulo: 'Correções',
+        descricao: 'Pedido de correção submetido',
+        obraId: correctionData.obra_id ? Number(correctionData.obra_id) : null,
+      });
       toast({ variant: 'success', title: 'Sucesso', description: 'O seu pedido de correção foi enviado para validação.' });
       onCorrectionSubmitted();
       onOpenChange(false);
