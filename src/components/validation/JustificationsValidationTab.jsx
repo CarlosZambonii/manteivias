@@ -11,10 +11,13 @@ import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import * as XLSX from 'xlsx';
+import { sendApprovalNotification } from '@/services/NotificationService';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const JustificationsValidationTab = ({ worksiteFilter }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [worksites, setWorksites] = useState([]);
   const [justifications, setJustifications] = useState([]);
@@ -110,12 +113,37 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
     fetchJustifications();
   }, [fetchJustifications]);
 
-  const handleUpdateStatus = (updatedJustification) => {
-    // Optimistic UI update
-    setJustifications(prev => prev.map(j => 
-        j.id === updatedJustification.id ? { ...j, status_validacao: updatedJustification.status_validacao } : j
-    ));
-    fetchJustifications(true);
+  const handleUpdateStatus = async (justification, status, comment = null) => {
+    try {
+      const updateData = {
+        status_validacao: status,
+        validado_por: user.id,
+        data_validacao: new Date().toISOString(),
+      };
+      if (status === 'Rejeitado' && comment) {
+        updateData.rejeicao_comentario = comment;
+      }
+
+      const { error } = await supabase
+        .from('justificação')
+        .update(updateData)
+        .eq('id', justification.id);
+
+      if (error) throw error;
+
+      sendApprovalNotification(justification.usuario_id, 'justificacao', status, comment || '');
+      setJustifications(prev => prev.map(j =>
+        j.id === justification.id ? { ...j, ...updateData } : j
+      ));
+      toast({
+        variant: 'success',
+        title: status === 'Aprovado' ? 'Justificação Aprovada' : 'Justificação Rejeitada',
+      });
+      fetchJustifications(true);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar o estado.' });
+      throw error;
+    }
   };
   
   const handleFilterChange = (key, value) => {
@@ -151,7 +179,7 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
   
   const monthOptions = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), i));
   const worksiteOptions = [
-    { value: 'all', label: 'Todas as Obras' },
+    { value: 'all', label: t('common.allWorksites') },
     ...worksites.map(w => ({ value: String(w.id), label: `${w.id} - ${w.nome}` }))
   ];
 
@@ -161,50 +189,50 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
         <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <Filter className="h-5 w-5 text-primary" />
-                <h2>Filtros de Pesquisa</h2>
+                <h2>{t('validation.searchFilters')}</h2>
             </div>
-            <Button 
-                variant="outline" 
-                size="sm" 
+            <Button
+                variant="outline"
+                size="sm"
                 onClick={handleExportXLSX}
                 disabled={isLoading || justifications.length === 0}
             >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                {t('common.download')}
             </Button>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">Obra</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.worksiteFilter')}</label>
                 <Combobox
                     options={worksiteOptions}
                     value={filters.worksiteId}
                     onChange={(v) => handleFilterChange('worksiteId', v)}
-                    placeholder="Filtrar por obra..."
-                    searchPlaceholder="Procurar obra..."
-                    noResultsText="Nenhuma obra encontrada."
+                    placeholder={t('common.allWorksites')}
+                    searchPlaceholder={t('common.search')}
+                    noResultsText={t('common.noWorksite')}
                     className="w-full"
                 />
             </div>
-            
+
             <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">Status</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.statusFilter')}</label>
                 <Select value={filters.status} onValueChange={(v) => handleFilterChange('status', v)}>
-                  <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('validation.statusFilter')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Todos">Todos os Estados</SelectItem>
-                    <SelectItem value="Pendente">Pendentes</SelectItem>
-                    <SelectItem value="Aprovado">Aprovados</SelectItem>
-                    <SelectItem value="Rejeitado">Rejeitados</SelectItem>
+                    <SelectItem value="Todos">{t('validation.allStatus')}</SelectItem>
+                    <SelectItem value="Pendente">{t('validation.pendingStatus')}</SelectItem>
+                    <SelectItem value="Aprovado">{t('validation.approvedStatus')}</SelectItem>
+                    <SelectItem value="Rejeitado">{t('validation.rejectedStatus')}</SelectItem>
                   </SelectContent>
                 </Select>
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">Período</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.monthFilter')}</label>
                 <Select value={format(filters.month, 'yyyy-MM')} onValueChange={(v) => handleFilterChange('month', v)}>
-                  <SelectTrigger><SelectValue placeholder="Mês" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('validation.monthFilter')} /></SelectTrigger>
                   <SelectContent>
                     {monthOptions.map(m => (
                       <SelectItem key={format(m, 'yyyy-MM')} value={format(m, 'yyyy-MM')}>
@@ -216,11 +244,11 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">Pesquisa</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.searchFilter')}</label>
                 <div className="relative w-full">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Nome do colaborador..." 
+                    <Input
+                        placeholder={t('common.searchEmployee')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -238,7 +266,7 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
                 className="w-full sm:w-auto min-w-[120px]"
             >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Atualizando...' : 'Atualizar Dados'}
+                {isRefreshing ? t('validation.refreshing') : t('validation.refreshData')}
             </Button>
         </div>
       </div>

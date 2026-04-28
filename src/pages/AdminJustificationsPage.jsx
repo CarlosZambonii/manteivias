@@ -13,6 +13,7 @@ import { ChevronLeft, Search, Filter } from 'lucide-react';
 import { startOfMonth, endOfMonth, format, subMonths } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import JustificationsByUserList from '@/components/justifications/JustificationsByUserList';
+import { sendApprovalNotification } from '@/services/NotificationService';
 
 const AdminJustificationsPage = () => {
   const navigate = useNavigate();
@@ -141,10 +142,10 @@ const AdminJustificationsPage = () => {
           j.id === justification.id ? { ...j, ...updateData } : j
       ));
 
+      sendApprovalNotification(justification.usuario_id, 'justificacao', status, comment || '');
       toast({
           variant: 'success',
           title: status === 'Aprovado' ? 'Justificação Aprovada' : 'Justificação Rejeitada',
-          description: status === 'Rejeitado' ? 'O colaborador será notificado.' : null
       });
     } catch (error) {
       console.error(error);

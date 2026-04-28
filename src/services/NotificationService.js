@@ -1,4 +1,39 @@
 import { supabase } from '@/lib/customSupabaseClient.js';
+import { translations } from '@/i18n/translations';
+
+const getLang = () => {
+  const lang = localStorage.getItem('manteivias_language') || 'pt';
+  return translations[lang] ? lang : 'pt';
+};
+
+const tNotif = (lang, type, statusKey, field) => {
+  return translations[lang]?.notifications?.[type]?.[field]
+    || translations.pt.notifications[type][field];
+};
+
+export const sendApprovalNotification = async (userId, type, status, comment = '') => {
+  if (!userId) return;
+  const lang = getLang();
+  const statusKey = status === 'Aprovado' ? 'approved' : 'rejected';
+
+  const title = tNotif(lang, type, statusKey, `${statusKey}Title`);
+  const baseMsg = tNotif(lang, type, statusKey, `${statusKey}Msg`);
+  const reasonPrefix = translations[lang]?.notifications?.reasonPrefix || translations.pt.notifications.reasonPrefix;
+
+  if (!title || !baseMsg) return;
+
+  const message = (status === 'Rejeitado' && comment)
+    ? `${baseMsg} ${reasonPrefix} ${comment}`
+    : baseMsg;
+
+  try {
+    await supabase.functions.invoke('send-push-notification', {
+      body: { userId, title, message, data: { url: '/historico' } },
+    });
+  } catch (err) {
+    console.error('[sendApprovalNotification] Failed:', err);
+  }
+};
 
 const urlBase64ToUint8Array = (base64String) => {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);

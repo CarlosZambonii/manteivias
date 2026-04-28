@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Combobox } from '@/components/ui/combobox';
 import * as XLSX from 'xlsx';
+import { sendApprovalNotification } from '@/services/NotificationService';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const getStatusVariant = (status) => {
   switch (status) {
@@ -23,6 +25,7 @@ const getStatusVariant = (status) => {
 const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [corrections, setCorrections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -90,7 +93,7 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
       setCorrections(data || []);
 
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Erro ao carregar correções mensais.' });
+      toast({ variant: 'destructive', title: t('common.error'), description: t('corrections.monthlyError') });
     } finally {
       setIsLoading(false);
     }
@@ -114,10 +117,14 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
 
       if (error) throw error;
 
-      toast({ variant: 'success', title: `Correção ${newStatus === 'Aprovado' ? 'aprovada' : 'rejeitada'}!` });
+      const correction = corrections.find(c => c.id === id);
+      if (correction) {
+        sendApprovalNotification(correction.usuario_id, 'correcao_mensal', newStatus);
+      }
+      toast({ variant: 'success', title: newStatus === 'Aprovado' ? t('corrections.monthlyApproved') : t('corrections.monthlyRejected') });
       fetchCorrections();
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } finally {
       setUpdatingId(null);
     }

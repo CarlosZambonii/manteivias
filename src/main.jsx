@@ -12,6 +12,7 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { requestNotificationPermission } from '@/utils/NotificationPermissionManager';
 import { subscribeToNotifications } from '@/services/NotificationService.js';
+import { isIOS } from '@/utils/iosDetector';
 
 // Register Service Worker and Request Notification Permissions
 if ('serviceWorker' in navigator) {
@@ -23,13 +24,14 @@ if ('serviceWorker' in navigator) {
       })
       .then(readyRegistration => {
         console.log('SW is active and ready.');
-        // Request permissions and subscribe (Android only, managed inside utilities)
-        requestNotificationPermission().then(granted => {
-          if (granted) {
-            // Subscription will be finalized when user is available or silently in background
-            subscribeToNotifications(null);
-          }
-        });
+        // iOS requires permission from a user gesture — handled by IOSNotificationPrompt component
+        if (!isIOS()) {
+          requestNotificationPermission().then(granted => {
+            if (granted) {
+              subscribeToNotifications(null);
+            }
+          });
+        }
       })
       .catch(registrationError => {
         console.error('SW registration failed:', registrationError);

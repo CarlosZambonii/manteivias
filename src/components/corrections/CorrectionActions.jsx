@@ -6,14 +6,17 @@ import { logAcao } from '@/lib/logService';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { sendApprovalNotification } from '@/services/NotificationService';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
   const { user, isReadOnlyAdmin } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleAction = async (e, status) => {
-    e.stopPropagation(); // Prevent card expansion if clicked
+    e.stopPropagation();
     setIsLoading(true);
     try {
       const { error } = await supabase
@@ -29,12 +32,13 @@ const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
         modulo: 'Validações',
         descricao: `Correção ${status === 'Aprovado' ? 'aprovada' : 'rejeitada'}`,
       });
+      sendApprovalNotification(correction.usuario_id, 'correcao', status);
       toast({
         variant: status === 'Aprovado' ? 'success' : 'default',
-        title: status === 'Aprovado' ? 'Aprovado' : 'Rejeitado',
-        description: `A correção foi ${status === 'Aprovado' ? 'aprovada' : 'rejeitada'} com sucesso.`,
+        title: status === 'Aprovado' ? t('common.approve') : t('common.reject'),
+        description: status === 'Aprovado' ? t('corrections.approveSuccess') : t('corrections.rejectSuccess'),
       });
-      
+
       if (onUpdateStatus) {
         onUpdateStatus({ id: correction.id, status });
       }
@@ -42,8 +46,8 @@ const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Erro ao atualizar',
-        description: 'Não foi possível atualizar o estado da correção.',
+        title: t('common.error'),
+        description: t('corrections.updateError'),
       });
     } finally {
       setIsLoading(false);
@@ -52,11 +56,11 @@ const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
 
   if (correction.status !== 'Pendente') {
     return (
-        <div className={cn("w-full text-center py-2 bg-muted/30 rounded-md", className)}>
-             <span className="text-xs text-muted-foreground italic">
-                Processado em {correction.data_validacao ? new Date(correction.data_validacao).toLocaleDateString() : 'N/A'}
-             </span>
-        </div>
+      <div className={cn("w-full text-center py-2 bg-muted/30 rounded-md", className)}>
+        <span className="text-xs text-muted-foreground italic">
+          {t('common.processedAt')} {correction.data_validacao ? new Date(correction.data_validacao).toLocaleDateString() : t('common.na')}
+        </span>
+      </div>
     );
   }
 
@@ -65,26 +69,26 @@ const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
       {isLoading ? (
         <Button disabled className="w-full" variant="outline">
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          Processando...
+          {t('common.processing')}
         </Button>
       ) : (
         <>
-          <Button 
-            onClick={(e) => handleAction(e, 'Rejeitado')} 
-            variant="outline" 
+          <Button
+            onClick={(e) => handleAction(e, 'Rejeitado')}
+            variant="outline"
             className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/30 dark:hover:bg-red-900/20 h-10"
             disabled={isReadOnlyAdmin}
           >
-            <X className="h-4 w-4 mr-2" /> 
-            Rejeitar
+            <X className="h-4 w-4 mr-2" />
+            {t('common.reject')}
           </Button>
-          <Button 
-            onClick={(e) => handleAction(e, 'Aprovado')} 
+          <Button
+            onClick={(e) => handleAction(e, 'Aprovado')}
             className="flex-1 bg-green-600 hover:bg-green-700 text-white h-10 shadow-sm transition-all active:scale-[0.98]"
             disabled={isReadOnlyAdmin}
           >
-            <Check className="h-4 w-4 mr-2" /> 
-            Aprovar
+            <Check className="h-4 w-4 mr-2" />
+            {t('common.approve')}
           </Button>
         </>
       )}

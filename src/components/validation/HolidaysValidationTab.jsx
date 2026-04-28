@@ -26,6 +26,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
+import { sendApprovalNotification } from '@/services/NotificationService';
 
 const HolidaysValidationTab = ({ worksiteFilter }) => {
   const { user, loading: authLoading } = useAuth();
@@ -275,6 +276,7 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
 
           if (error) throw error;
           
+          sendApprovalNotification(item.usuario_id, 'ferias', status);
           toast({
             variant: type === 'approve' ? 'success' : 'destructive',
             title: status === 'Aprovado' ? 'Aprovado Online' : 'Rejeitado Online',

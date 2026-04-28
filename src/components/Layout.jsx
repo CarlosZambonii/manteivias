@@ -5,6 +5,7 @@ import { useTime } from '@/contexts/TimeContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
+import IOSNotificationPrompt from '@/components/IOSNotificationPrompt';
 
 const Layout = ({ children }) => {
   const { isClockedIn } = useTime();
@@ -40,9 +41,10 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       <Header />
-      <main className="container mx-auto px-4"> 
+      <main className="container mx-auto px-4">
         {children}
       </main>
+      <IOSNotificationPrompt />
     </div>
   );
 };

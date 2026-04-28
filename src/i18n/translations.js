@@ -24,7 +24,28 @@ export const translations = {
       view: "Ver",
       edit: "Editar",
       delete: "Excluir",
-      add: "Adicionar"
+      add: "Adicionar",
+      approve: "Aprovar",
+      reject: "Rejeitar",
+      confirm: "Confirmar",
+      processing: "A processar...",
+      download: "Download",
+      refresh: "Atualizar",
+      refreshing: "Atualizando...",
+      location: "Localização",
+      period: "Período",
+      worksite: "Obra",
+      employee: "Colaborador",
+      reason: "Motivo",
+      noResults: "Sem resultados",
+      updateData: "Atualizar Dados",
+      viewAttachment: "Ver Anexo",
+      noAttachment: "Sem anexo",
+      processedAt: "Processado em",
+      na: "N/A",
+      searchEmployee: "Pesquisar colaborador...",
+      allWorksites: "Todas as Obras",
+      noWorksite: "Nenhuma obra encontrada."
     },
     auth: {
       loginTitle: "Acesso ao Sistema",
@@ -179,7 +200,100 @@ export const translations = {
       clearFilters: "Limpar Filtros",
       results: "Resultados",
       sortBy: "Ordenar Por",
-      noRequests: "Nenhum pedido encontrado."
+      noRequests: "Nenhum pedido encontrado.",
+      allStatus: "Todos os Estados",
+      pendingStatus: "Pendentes",
+      approvedStatus: "Aprovados",
+      rejectedStatus: "Rejeitados",
+      searchFilters: "Filtros de Pesquisa",
+      worksiteFilter: "Obra",
+      statusFilter: "Status",
+      monthFilter: "Período",
+      searchFilter: "Pesquisa",
+      refreshData: "Atualizar Dados",
+      refreshing: "Atualizando...",
+      noJustifications: "Sem justificações",
+      noJustificationsDesc: "Não há justificações para validar com os filtros atuais.",
+      recordsTab: "Registos",
+      correctionsTab: "Correções",
+      justificationsTab: "Justificações",
+      holidaysTab: "Férias",
+      dailyTab: "Diário",
+      monthlyTab: "Mensal"
+    },
+    records: {
+      rejectDialogTitle: "Rejeitar Registo",
+      rejectDialogSubtitle: "Justifique a rejeição.",
+      rejectPlaceholder: "Ex: Não compareceu...",
+      autoClosedWarning: "Fechado Automaticamente pelo Sistema",
+      unknownWorksite: "Obra Desconhecida",
+      onSite: "No Local",
+      offSite: "Fora do Local",
+      noGps: "Sem GPS",
+      distance: "Distância:",
+      pendingCorrectionsWarning: "Não é possível processar este registo, pois possui correções pendentes ou aprovadas.",
+      rejectReasonLabel: "Motivo:",
+      deleteTitle: "Tem a certeza que quer eliminar/cancelar este registo?",
+      deleteDesc: "Esta ação removerá o registo ou irá marcá-lo como cancelado. Ele será mantido no histórico para fins de auditoria se possuir correções.",
+      approved: "Registo Aprovado",
+      rejected: "Registo Rejeitado",
+      updateError: "Falha ao atualizar estado.",
+      deleteError: "Erro ao processar registo",
+      deleteSuccess: "Registo processado com sucesso",
+      real: "Real:"
+    },
+    corrections: {
+      approveSuccess: "A correção foi aprovada com sucesso.",
+      rejectSuccess: "A correção foi rejeitada com sucesso.",
+      updateError: "Não foi possível atualizar o estado da correção.",
+      monthlyApproved: "Correção aprovada!",
+      monthlyRejected: "Correção rejeitada!",
+      monthlyError: "Erro ao carregar correções mensais."
+    },
+    justifications: {
+      rejectDialogTitle: "Rejeitar Justificação",
+      rejectDialogSubtitle: "Indique o motivo da rejeição para o colaborador.",
+      rejectPlaceholder: "Ex: Documento ilegível, datas incorretas...",
+      approved: "Justificação Aprovada",
+      rejected: "Justificação Rejeitada",
+      updateError: "Não foi possível atualizar o estado.",
+      daysIncluded: "Dias Incluídos:",
+      rejectReasonLabel: "Motivo da Rejeição:",
+      noValidDates: "Sem datas válidas associadas.",
+      withoutComment: "Sem comentário."
+    },
+    notifications: {
+      registo: {
+        approvedTitle: "Registo Aprovado",
+        approvedMsg: "O seu registo de ponto foi aprovado.",
+        rejectedTitle: "Registo Rejeitado",
+        rejectedMsg: "O seu registo de ponto foi rejeitado."
+      },
+      justificacao: {
+        approvedTitle: "Justificação Aprovada",
+        approvedMsg: "A sua justificação foi aprovada.",
+        rejectedTitle: "Justificação Rejeitada",
+        rejectedMsg: "A sua justificação foi rejeitada."
+      },
+      ferias: {
+        approvedTitle: "Férias Aprovadas",
+        approvedMsg: "O seu pedido de férias foi aprovado.",
+        rejectedTitle: "Férias Rejeitadas",
+        rejectedMsg: "O seu pedido de férias foi rejeitado."
+      },
+      correcao: {
+        approvedTitle: "Correção Aprovada",
+        approvedMsg: "A sua correção de registo foi aprovada.",
+        rejectedTitle: "Correção Rejeitada",
+        rejectedMsg: "A sua correção de registo foi rejeitada."
+      },
+      correcao_mensal: {
+        approvedTitle: "Correção Mensal Aprovada",
+        approvedMsg: "A sua correção mensal foi aprovada.",
+        rejectedTitle: "Correção Mensal Rejeitada",
+        rejectedMsg: "A sua correção mensal foi rejeitada."
+      },
+      reasonPrefix: "Motivo:"
     }
   },
   en: {
@@ -207,7 +321,28 @@ export const translations = {
       view: "View",
       edit: "Edit",
       delete: "Delete",
-      add: "Add"
+      add: "Add",
+      approve: "Approve",
+      reject: "Reject",
+      confirm: "Confirm",
+      processing: "Processing...",
+      download: "Download",
+      refresh: "Refresh",
+      refreshing: "Refreshing...",
+      location: "Location",
+      period: "Period",
+      worksite: "Worksite",
+      employee: "Employee",
+      reason: "Reason",
+      noResults: "No results",
+      updateData: "Refresh Data",
+      viewAttachment: "View Attachment",
+      noAttachment: "No attachment",
+      processedAt: "Processed on",
+      na: "N/A",
+      searchEmployee: "Search employee...",
+      allWorksites: "All Worksites",
+      noWorksite: "No worksite found."
     },
     auth: {
       loginTitle: "System Access",
@@ -362,7 +497,100 @@ export const translations = {
       clearFilters: "Clear Filters",
       results: "Results",
       sortBy: "Sort By",
-      noRequests: "No requests found."
+      noRequests: "No requests found.",
+      allStatus: "All Statuses",
+      pendingStatus: "Pending",
+      approvedStatus: "Approved",
+      rejectedStatus: "Rejected",
+      searchFilters: "Search Filters",
+      worksiteFilter: "Worksite",
+      statusFilter: "Status",
+      monthFilter: "Period",
+      searchFilter: "Search",
+      refreshData: "Refresh Data",
+      refreshing: "Refreshing...",
+      noJustifications: "No justifications",
+      noJustificationsDesc: "No justifications to validate with the current filters.",
+      recordsTab: "Records",
+      correctionsTab: "Corrections",
+      justificationsTab: "Justifications",
+      holidaysTab: "Holidays",
+      dailyTab: "Daily",
+      monthlyTab: "Monthly"
+    },
+    records: {
+      rejectDialogTitle: "Reject Record",
+      rejectDialogSubtitle: "Justify the rejection.",
+      rejectPlaceholder: "e.g. Did not show up...",
+      autoClosedWarning: "Automatically Closed by System",
+      unknownWorksite: "Unknown Worksite",
+      onSite: "On Site",
+      offSite: "Off Site",
+      noGps: "No GPS",
+      distance: "Distance:",
+      pendingCorrectionsWarning: "Cannot process this record, it has pending or approved corrections.",
+      rejectReasonLabel: "Reason:",
+      deleteTitle: "Are you sure you want to delete/cancel this record?",
+      deleteDesc: "This action will remove the record or mark it as cancelled. It will be kept in history for audit if it has corrections.",
+      approved: "Record Approved",
+      rejected: "Record Rejected",
+      updateError: "Failed to update status.",
+      deleteError: "Error processing record",
+      deleteSuccess: "Record processed successfully",
+      real: "Real:"
+    },
+    corrections: {
+      approveSuccess: "The correction was approved successfully.",
+      rejectSuccess: "The correction was rejected successfully.",
+      updateError: "Could not update the correction status.",
+      monthlyApproved: "Correction approved!",
+      monthlyRejected: "Correction rejected!",
+      monthlyError: "Error loading monthly corrections."
+    },
+    justifications: {
+      rejectDialogTitle: "Reject Justification",
+      rejectDialogSubtitle: "State the rejection reason for the employee.",
+      rejectPlaceholder: "e.g. Illegible document, incorrect dates...",
+      approved: "Justification Approved",
+      rejected: "Justification Rejected",
+      updateError: "Could not update the status.",
+      daysIncluded: "Days Included:",
+      rejectReasonLabel: "Rejection Reason:",
+      noValidDates: "No valid dates associated.",
+      withoutComment: "No comment."
+    },
+    notifications: {
+      registo: {
+        approvedTitle: "Record Approved",
+        approvedMsg: "Your time record was approved.",
+        rejectedTitle: "Record Rejected",
+        rejectedMsg: "Your time record was rejected."
+      },
+      justificacao: {
+        approvedTitle: "Justification Approved",
+        approvedMsg: "Your justification was approved.",
+        rejectedTitle: "Justification Rejected",
+        rejectedMsg: "Your justification was rejected."
+      },
+      ferias: {
+        approvedTitle: "Holiday Approved",
+        approvedMsg: "Your holiday request was approved.",
+        rejectedTitle: "Holiday Rejected",
+        rejectedMsg: "Your holiday request was rejected."
+      },
+      correcao: {
+        approvedTitle: "Correction Approved",
+        approvedMsg: "Your record correction was approved.",
+        rejectedTitle: "Correction Rejected",
+        rejectedMsg: "Your record correction was rejected."
+      },
+      correcao_mensal: {
+        approvedTitle: "Monthly Correction Approved",
+        approvedMsg: "Your monthly correction was approved.",
+        rejectedTitle: "Monthly Correction Rejected",
+        rejectedMsg: "Your monthly correction was rejected."
+      },
+      reasonPrefix: "Reason:"
     }
   },
   es: {
@@ -390,7 +618,28 @@ export const translations = {
       view: "Ver",
       edit: "Editar",
       delete: "Eliminar",
-      add: "Añadir"
+      add: "Añadir",
+      approve: "Aprobar",
+      reject: "Rechazar",
+      confirm: "Confirmar",
+      processing: "Procesando...",
+      download: "Descargar",
+      refresh: "Actualizar",
+      refreshing: "Actualizando...",
+      location: "Ubicación",
+      period: "Período",
+      worksite: "Obra",
+      employee: "Colaborador",
+      reason: "Motivo",
+      noResults: "Sin resultados",
+      updateData: "Actualizar Datos",
+      viewAttachment: "Ver Adjunto",
+      noAttachment: "Sin adjunto",
+      processedAt: "Procesado el",
+      na: "N/A",
+      searchEmployee: "Buscar colaborador...",
+      allWorksites: "Todas las Obras",
+      noWorksite: "No se encontraron obras."
     },
     auth: {
       loginTitle: "Acceso al Sistema",
@@ -545,7 +794,100 @@ export const translations = {
       clearFilters: "Borrar Filtros",
       results: "Resultados",
       sortBy: "Ordenar Por",
-      noRequests: "No se encontraron solicitudes."
+      noRequests: "No se encontraron solicitudes.",
+      allStatus: "Todos los Estados",
+      pendingStatus: "Pendientes",
+      approvedStatus: "Aprobados",
+      rejectedStatus: "Rechazados",
+      searchFilters: "Filtros de Búsqueda",
+      worksiteFilter: "Obra",
+      statusFilter: "Estado",
+      monthFilter: "Período",
+      searchFilter: "Búsqueda",
+      refreshData: "Actualizar Datos",
+      refreshing: "Actualizando...",
+      noJustifications: "Sin justificaciones",
+      noJustificationsDesc: "No hay justificaciones para validar con los filtros actuales.",
+      recordsTab: "Registros",
+      correctionsTab: "Correcciones",
+      justificationsTab: "Justificaciones",
+      holidaysTab: "Vacaciones",
+      dailyTab: "Diario",
+      monthlyTab: "Mensual"
+    },
+    records: {
+      rejectDialogTitle: "Rechazar Registro",
+      rejectDialogSubtitle: "Justifique el rechazo.",
+      rejectPlaceholder: "Ej: No se presentó...",
+      autoClosedWarning: "Cerrado Automáticamente por el Sistema",
+      unknownWorksite: "Obra Desconocida",
+      onSite: "En el Lugar",
+      offSite: "Fuera del Lugar",
+      noGps: "Sin GPS",
+      distance: "Distancia:",
+      pendingCorrectionsWarning: "No se puede procesar este registro, tiene correcciones pendientes o aprobadas.",
+      rejectReasonLabel: "Motivo:",
+      deleteTitle: "¿Está seguro de que desea eliminar/cancelar este registro?",
+      deleteDesc: "Esta acción eliminará el registro o lo marcará como cancelado. Se mantendrá en el historial para auditoría si tiene correcciones.",
+      approved: "Registro Aprobado",
+      rejected: "Registro Rechazado",
+      updateError: "Error al actualizar el estado.",
+      deleteError: "Error al procesar registro",
+      deleteSuccess: "Registro procesado con éxito",
+      real: "Real:"
+    },
+    corrections: {
+      approveSuccess: "La corrección fue aprobada con éxito.",
+      rejectSuccess: "La corrección fue rechazada con éxito.",
+      updateError: "No se pudo actualizar el estado de la corrección.",
+      monthlyApproved: "¡Corrección aprobada!",
+      monthlyRejected: "¡Corrección rechazada!",
+      monthlyError: "Error al cargar correcciones mensuales."
+    },
+    justifications: {
+      rejectDialogTitle: "Rechazar Justificación",
+      rejectDialogSubtitle: "Indique el motivo del rechazo al colaborador.",
+      rejectPlaceholder: "Ej: Documento ilegible, fechas incorrectas...",
+      approved: "Justificación Aprobada",
+      rejected: "Justificación Rechazada",
+      updateError: "No se pudo actualizar el estado.",
+      daysIncluded: "Días Incluidos:",
+      rejectReasonLabel: "Motivo del Rechazo:",
+      noValidDates: "Sin fechas válidas asociadas.",
+      withoutComment: "Sin comentario."
+    },
+    notifications: {
+      registo: {
+        approvedTitle: "Registro Aprobado",
+        approvedMsg: "Su registro de tiempo fue aprobado.",
+        rejectedTitle: "Registro Rechazado",
+        rejectedMsg: "Su registro de tiempo fue rechazado."
+      },
+      justificacao: {
+        approvedTitle: "Justificación Aprobada",
+        approvedMsg: "Su justificación fue aprobada.",
+        rejectedTitle: "Justificación Rechazada",
+        rejectedMsg: "Su justificación fue rechazada."
+      },
+      ferias: {
+        approvedTitle: "Vacaciones Aprobadas",
+        approvedMsg: "Su solicitud de vacaciones fue aprobada.",
+        rejectedTitle: "Vacaciones Rechazadas",
+        rejectedMsg: "Su solicitud de vacaciones fue rechazada."
+      },
+      correcao: {
+        approvedTitle: "Corrección Aprobada",
+        approvedMsg: "Su corrección de registro fue aprobada.",
+        rejectedTitle: "Corrección Rechazada",
+        rejectedMsg: "Su corrección de registro fue rechazada."
+      },
+      correcao_mensal: {
+        approvedTitle: "Corrección Mensual Aprobada",
+        approvedMsg: "Su corrección mensual fue aprobada.",
+        rejectedTitle: "Corrección Mensual Rechazada",
+        rejectedMsg: "Su corrección mensual fue rechazada."
+      },
+      reasonPrefix: "Motivo:"
     }
   },
   fr: {
@@ -573,7 +915,28 @@ export const translations = {
       view: "Voir",
       edit: "Modifier",
       delete: "Supprimer",
-      add: "Ajouter"
+      add: "Ajouter",
+      approve: "Approuver",
+      reject: "Rejeter",
+      confirm: "Confirmer",
+      processing: "Traitement...",
+      download: "Télécharger",
+      refresh: "Actualiser",
+      refreshing: "Actualisation...",
+      location: "Localisation",
+      period: "Période",
+      worksite: "Chantier",
+      employee: "Collaborateur",
+      reason: "Motif",
+      noResults: "Aucun résultat",
+      updateData: "Actualiser les données",
+      viewAttachment: "Voir Pièce Jointe",
+      noAttachment: "Sans pièce jointe",
+      processedAt: "Traité le",
+      na: "N/A",
+      searchEmployee: "Rechercher collaborateur...",
+      allWorksites: "Tous les Chantiers",
+      noWorksite: "Aucun chantier trouvé."
     },
     auth: {
       loginTitle: "Accès Système",
@@ -728,7 +1091,100 @@ export const translations = {
       clearFilters: "Effacer les Filtres",
       results: "Résultats",
       sortBy: "Trier Par",
-      noRequests: "Aucune demande trouvée."
+      noRequests: "Aucune demande trouvée.",
+      allStatus: "Tous les États",
+      pendingStatus: "En attente",
+      approvedStatus: "Approuvés",
+      rejectedStatus: "Rejetés",
+      searchFilters: "Filtres de Recherche",
+      worksiteFilter: "Chantier",
+      statusFilter: "État",
+      monthFilter: "Période",
+      searchFilter: "Recherche",
+      refreshData: "Actualiser les données",
+      refreshing: "Actualisation...",
+      noJustifications: "Aucune justification",
+      noJustificationsDesc: "Aucune justification à valider avec les filtres actuels.",
+      recordsTab: "Enregistrements",
+      correctionsTab: "Corrections",
+      justificationsTab: "Justifications",
+      holidaysTab: "Congés",
+      dailyTab: "Journalier",
+      monthlyTab: "Mensuel"
+    },
+    records: {
+      rejectDialogTitle: "Rejeter l'Enregistrement",
+      rejectDialogSubtitle: "Justifiez le rejet.",
+      rejectPlaceholder: "Ex: Ne s'est pas présenté...",
+      autoClosedWarning: "Fermé Automatiquement par le Système",
+      unknownWorksite: "Chantier Inconnu",
+      onSite: "Sur Place",
+      offSite: "Hors Site",
+      noGps: "Sans GPS",
+      distance: "Distance:",
+      pendingCorrectionsWarning: "Impossible de traiter cet enregistrement, il a des corrections en attente ou approuvées.",
+      rejectReasonLabel: "Motif:",
+      deleteTitle: "Êtes-vous sûr de vouloir supprimer/annuler cet enregistrement?",
+      deleteDesc: "Cette action supprimera l'enregistrement ou le marquera comme annulé. Il sera conservé dans l'historique pour audit s'il a des corrections.",
+      approved: "Enregistrement Approuvé",
+      rejected: "Enregistrement Rejeté",
+      updateError: "Échec de la mise à jour du statut.",
+      deleteError: "Erreur lors du traitement",
+      deleteSuccess: "Enregistrement traité avec succès",
+      real: "Réel:"
+    },
+    corrections: {
+      approveSuccess: "La correction a été approuvée avec succès.",
+      rejectSuccess: "La correction a été rejetée avec succès.",
+      updateError: "Impossible de mettre à jour le statut de la correction.",
+      monthlyApproved: "Correction approuvée!",
+      monthlyRejected: "Correction rejetée!",
+      monthlyError: "Erreur lors du chargement des corrections mensuelles."
+    },
+    justifications: {
+      rejectDialogTitle: "Rejeter la Justification",
+      rejectDialogSubtitle: "Indiquez le motif du rejet au collaborateur.",
+      rejectPlaceholder: "Ex: Document illisible, dates incorrectes...",
+      approved: "Justification Approuvée",
+      rejected: "Justification Rejetée",
+      updateError: "Impossible de mettre à jour le statut.",
+      daysIncluded: "Jours Inclus:",
+      rejectReasonLabel: "Motif du Rejet:",
+      noValidDates: "Aucune date valide associée.",
+      withoutComment: "Sans commentaire."
+    },
+    notifications: {
+      registo: {
+        approvedTitle: "Enregistrement Approuvé",
+        approvedMsg: "Votre enregistrement de temps a été approuvé.",
+        rejectedTitle: "Enregistrement Rejeté",
+        rejectedMsg: "Votre enregistrement de temps a été rejeté."
+      },
+      justificacao: {
+        approvedTitle: "Justification Approuvée",
+        approvedMsg: "Votre justification a été approuvée.",
+        rejectedTitle: "Justification Rejetée",
+        rejectedMsg: "Votre justification a été rejetée."
+      },
+      ferias: {
+        approvedTitle: "Congés Approuvés",
+        approvedMsg: "Votre demande de congés a été approuvée.",
+        rejectedTitle: "Congés Rejetés",
+        rejectedMsg: "Votre demande de congés a été rejetée."
+      },
+      correcao: {
+        approvedTitle: "Correction Approuvée",
+        approvedMsg: "Votre correction d'enregistrement a été approuvée.",
+        rejectedTitle: "Correction Rejetée",
+        rejectedMsg: "Votre correction d'enregistrement a été rejetée."
+      },
+      correcao_mensal: {
+        approvedTitle: "Correction Mensuelle Approuvée",
+        approvedMsg: "Votre correction mensuelle a été approuvée.",
+        rejectedTitle: "Correction Mensuelle Rejetée",
+        rejectedMsg: "Votre correction mensuelle a été rejetée."
+      },
+      reasonPrefix: "Motif:"
     }
   }
 };
