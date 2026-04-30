@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +27,7 @@ const MonthlyClockInPage = () => {
   const [worksiteAllocations, setWorksiteAllocations] = useState([{ worksiteId: '', percentage: '' }]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingWorksites, setIsFetchingWorksites] = useState(true);
+  const submissionInProgressRef = useRef(false);
 
   const fetchWorksites = useCallback(async () => {
     setIsFetchingWorksites(true);
@@ -68,6 +69,14 @@ const MonthlyClockInPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submissionInProgressRef.current) return;
+
+    const lockKey = 'monthly_clock_in_submitting';
+    const lockTs = localStorage.getItem(lockKey);
+    if (lockTs && Date.now() - Number(lockTs) < 30000) return;
+
+    submissionInProgressRef.current = true;
+    localStorage.setItem(lockKey, String(Date.now()));
     setIsLoading(true);
 
     const filledAllocations = worksiteAllocations.filter(
@@ -139,6 +148,8 @@ const MonthlyClockInPage = () => {
     } catch(error) {
         toast({ variant: 'destructive', title: 'Erro ao submeter registo', description: error.message });
     } finally {
+        submissionInProgressRef.current = false;
+        localStorage.removeItem('monthly_clock_in_submitting');
         setIsLoading(false);
     }
   };

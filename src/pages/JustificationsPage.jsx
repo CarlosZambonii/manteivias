@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, RefreshCw, Loader2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Plus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import JustificationForm from '@/components/justifications/JustificationForm';
 import JustificationsByUserList from '@/components/justifications/JustificationsByUserList';
@@ -15,20 +16,35 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/hooks/useLanguage';
 
+const FERIAS_CODIGOS = ['FE', 'FP'];
+
 const JustificationsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [justifications, setJustifications] = useState([]);
+  const [feriasTipoIds, setFeriasTipoIds] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('Todos');
-  
+  const [activeTab, setActiveTab] = useState('justificacoes');
+
   // States for Edit/Delete actions
   const [editingJustification, setEditingJustification] = useState(null);
   const [deletingJustification, setDeletingJustification] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const fetchFeriasTipos = async () => {
+      const { data } = await supabase
+        .from('tipos_justificação')
+        .select('id, codigo')
+        .in('codigo', FERIAS_CODIGOS);
+      if (data) setFeriasTipoIds(new Set(data.map(t => t.id)));
+    };
+    fetchFeriasTipos();
+  }, []);
 
   const fetchMyJustifications = useCallback(async () => {
     if (!user) return;
@@ -39,17 +55,16 @@ const JustificationsPage = () => {
             .select(`
               *,
               usuarios:usuario_id(id, nome, avatar_url),
-              tipos_justificação(nome)
+              tipos_justificação(id, nome, codigo)
             `)
             .eq('usuario_id', user.id)
             .order('data_envio', { ascending: false });
-        
+
         if (statusFilter !== 'Todos') {
             query = query.eq('status_validacao', statusFilter);
         }
 
         const { data, error } = await query;
-
         if (error) throw error;
         setJustifications(data || []);
     } catch (error) {
@@ -92,12 +107,11 @@ const JustificationsPage = () => {
       if (!deletingJustification) return;
       setIsDeleting(true);
       try {
-          // Update status to 'Cancelado' instead of actual deletion
           const { error } = await supabase
               .from('justificação')
               .update({ status_validacao: 'Cancelado' })
               .eq('id', deletingJustification.id);
-          
+
           if (error) throw error;
 
           toast({ title: 'Sucesso', description: 'Justificação cancelada com sucesso.' });
@@ -110,14 +124,21 @@ const JustificationsPage = () => {
       }
   };
 
+  const regularJustifications = justifications.filter(
+    j => !feriasTipoIds.has(j.tipo_justificação_id)
+  );
+  const feriasJustifications = justifications.filter(
+    j => feriasTipoIds.has(j.tipo_justificação_id)
+  );
+
   return (
     <>
       <Helmet>
         <title>{t('justification.pageTitle') || 'Justificações'}</title>
         <meta name="description" content="Gerencie suas justificações de ausência." />
       </Helmet>
-      
-      <motion.div 
+
+      <motion.div
         className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -140,7 +161,7 @@ const JustificationsPage = () => {
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto">
-                 <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-full md:w-[150px]">
                         <SelectValue placeholder="Estado" />
                     </SelectTrigger>
@@ -168,14 +189,43 @@ const JustificationsPage = () => {
             </div>
         </div>
 
-        {/* Content Area */}
-        <div className="space-y-4">
-            <JustificationsByUserList 
-                justifications={justifications}
-                isLoading={isLoading}
-                onUpdateStatus={null} // Read-only for employee interactions, handled via Edit/Delete
-            />
-        </div>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-6">
+                <TabsTrigger value="justificacoes">
+                    Justificações
+                    {regularJustifications.length > 0 && (
+                        <span className="ml-2 text-xs bg-muted rounded-full px-1.5 py-0.5">
+                            {regularJustifications.length}
+                        </span>
+                    )}
+                </TabsTrigger>
+                <TabsTrigger value="ferias">
+                    Férias
+                    {feriasJustifications.length > 0 && (
+                        <span className="ml-2 text-xs bg-muted rounded-full px-1.5 py-0.5">
+                            {feriasJustifications.length}
+                        </span>
+                    )}
+                </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="justificacoes">
+                <JustificationsByUserList
+                    justifications={regularJustifications}
+                    isLoading={isLoading}
+                    onUpdateStatus={null}
+                />
+            </TabsContent>
+
+            <TabsContent value="ferias">
+                <JustificationsByUserList
+                    justifications={feriasJustifications}
+                    isLoading={isLoading}
+                    onUpdateStatus={null}
+                />
+            </TabsContent>
+        </Tabs>
 
         {/* Edit Modal */}
         {editingJustification && (
@@ -198,8 +248,8 @@ const JustificationsPage = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={isDeleting}>Voltar</AlertDialogCancel>
-                    <AlertDialogAction 
-                        onClick={(e) => { e.preventDefault(); confirmDelete(); }} 
+                    <AlertDialogAction
+                        onClick={(e) => { e.preventDefault(); confirmDelete(); }}
                         disabled={isDeleting}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >

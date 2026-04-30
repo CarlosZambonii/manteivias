@@ -2,10 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Download, Search, Filter, RefreshCw } from 'lucide-react';
+import { AlertCircle, Download, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { startOfMonth, endOfMonth, format, subMonths } from 'date-fns';
-import { pt } from 'date-fns/locale';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 import JustificationsByUserList from '@/components/justifications/JustificationsByUserList';
 import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
@@ -13,44 +12,58 @@ import { Input } from '@/components/ui/input';
 import * as XLSX from 'xlsx';
 import { sendApprovalNotification } from '@/services/NotificationService';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAvailableMonths } from '@/hooks/useAvailableMonths';
+import MonthMultiSelect from '@/components/ui/MonthMultiSelect';
 
 const JustificationsValidationTab = ({ worksiteFilter }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
-  
+
   const [worksites, setWorksites] = useState([]);
   const [justifications, setJustifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [filters, setFilters] = useState({
     worksiteId: 'all',
     status: 'Pendente',
-    month: new Date(),
   });
+  const [selectedMonths, setSelectedMonths] = useState([]);
 
-  // Extract primitive values to prevent infinite loops in useCallback
   const filterWorksiteId = filters.worksiteId;
   const filterStatus = filters.status;
-  const filterMonthTime = filters.month.getTime();
+  const selectedMonthsKey = selectedMonths.map(m => format(m, 'yyyy-MM')).sort().join(',');
+
+  const monthOptions = useAvailableMonths('justificação', 'data_envio');
+
+  useEffect(() => {
+    if (monthOptions.length > 0 && selectedMonths.length === 0) {
+      setSelectedMonths([monthOptions[0]]);
+    }
+  }, [monthOptions]);
 
   const fetchJustifications = useCallback(async (isRefresh = false) => {
     if (!user?.id) {
       setIsLoading(false);
       return;
     }
-    
+    if (selectedMonths.length === 0) {
+      setJustifications([]);
+      setIsLoading(false);
+      setIsRefreshing(false);
+      return;
+    }
+
     if (isRefresh) setIsRefreshing(true);
     else setIsLoading(true);
 
     try {
-      const currentMonth = new Date(filterMonthTime);
-      const fromDate = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
-      const toDate = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
-      
-      // Update query to include avatar_url
+      const sorted = [...selectedMonths].sort((a, b) => a - b);
+      const fromDate = format(startOfMonth(sorted[0]), 'yyyy-MM-dd');
+      const toDate = format(endOfMonth(sorted[sorted.length - 1]), 'yyyy-MM-dd');
+
       let query = supabase
         .from('justificação')
         .select('*, usuarios:usuario_id(id, nome, avatar_url), tipos_justificação(nome)')
@@ -64,7 +77,7 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
 
       let worksiteQuery = supabase.from('obras').select('id, nome');
       if (worksiteFilter) worksiteQuery = worksiteQuery.in('id', worksiteFilter);
-      
+
       const { data: worksitesData, error: worksitesError } = await worksiteQuery;
       if (worksitesError) throw worksitesError;
       setWorksites(worksitesData || []);
@@ -72,7 +85,7 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
       const worksiteIds = filterWorksiteId === 'all'
         ? (worksiteFilter || (worksitesData || []).map(w => w.id))
         : [parseInt(filterWorksiteId)];
-      
+
       if (worksiteIds && worksiteIds.length > 0) {
           const { data: userIdsInWorksite, error: usersError } = await supabase
               .from('registros_ponto')
@@ -81,7 +94,7 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
 
           if (usersError) throw usersError;
           const uniqueUserIds = [...new Set(userIdsInWorksite.map(u => u.usuario_id))];
-          
+
           if (uniqueUserIds.length > 0) {
               query = query.in('usuario_id', uniqueUserIds);
           } else {
@@ -99,15 +112,20 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      setJustifications(data || []);
 
+      const selectedKeys = new Set(selectedMonths.map(m => format(m, 'yyyy-MM')));
+      const filtered = (data || []).filter(r =>
+        r.data_envio && selectedKeys.has(r.data_envio.substring(0, 7))
+      );
+
+      setJustifications(filtered);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erro', description: `Não foi possível carregar as justificações: ${error.message}` });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [user?.id, filterWorksiteId, filterStatus, filterMonthTime, worksiteFilter, toast]);
+  }, [user?.id, filterWorksiteId, filterStatus, selectedMonthsKey, worksiteFilter, toast]);
 
   useEffect(() => {
     fetchJustifications();
@@ -145,21 +163,12 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
       throw error;
     }
   };
-  
-  const handleFilterChange = (key, value) => {
-    if (key === 'month') {
-      const [year, month] = value.split('-').map(Number);
-      value = new Date(year, month - 1, 15);
-    }
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
 
   const handleExportXLSX = () => {
     if (!justifications || justifications.length === 0) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Não há dados para exportar.' });
       return;
     }
-
     const exportData = justifications.map(j => ({
       usuario_id: j.usuario_id,
       usuario_nome: j.usuarios?.nome || '',
@@ -169,123 +178,83 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
       status_validacao: j.status_validacao,
       data_envio: j.data_envio ? format(new Date(j.data_envio), 'yyyy-MM-dd HH:mm') : ''
     }));
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Justificações");
-    const filename = `justificacoes_validacao_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
-    XLSX.writeFile(workbook, filename);
+    XLSX.writeFile(workbook, `justificacoes_validacao_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
-  
-  const monthOptions = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), i));
+
   const worksiteOptions = [
     { value: 'all', label: t('common.allWorksites') },
     ...worksites.map(w => ({ value: String(w.id), label: `${w.id} - ${w.nome}` }))
   ];
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto px-4 py-6">
-      <div className="bg-card p-6 rounded-xl border shadow-sm space-y-6 mb-8">
-        <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                <Filter className="h-5 w-5 text-primary" />
-                <h2>{t('validation.searchFilters')}</h2>
-            </div>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportXLSX}
-                disabled={isLoading || justifications.length === 0}
-            >
-                <Download className="h-4 w-4 mr-2" />
-                {t('common.download')}
-            </Button>
+    <div className="space-y-6">
+      <div className="bg-card p-4 rounded-lg border shadow-sm space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Combobox
+            options={worksiteOptions}
+            value={filters.worksiteId}
+            onChange={(v) => setFilters(prev => ({ ...prev, worksiteId: v }))}
+            placeholder={t('common.allWorksites')}
+            searchPlaceholder={t('common.search')}
+            noResultsText={t('common.noWorksite')}
+            className="w-full"
+          />
+          <MonthMultiSelect
+            months={monthOptions}
+            selectedMonths={selectedMonths}
+            onChange={setSelectedMonths}
+          />
+          <Select value={filters.status} onValueChange={(v) => setFilters(prev => ({ ...prev, status: v }))}>
+            <SelectTrigger><SelectValue placeholder={t('validation.statusFilter')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">{t('validation.allStatus')}</SelectItem>
+              <SelectItem value="Pendente">{t('validation.pendingStatus')}</SelectItem>
+              <SelectItem value="Aprovado">{t('validation.approvedStatus')}</SelectItem>
+              <SelectItem value="Rejeitado">{t('validation.rejectedStatus')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.worksiteFilter')}</label>
-                <Combobox
-                    options={worksiteOptions}
-                    value={filters.worksiteId}
-                    onChange={(v) => handleFilterChange('worksiteId', v)}
-                    placeholder={t('common.allWorksites')}
-                    searchPlaceholder={t('common.search')}
-                    noResultsText={t('common.noWorksite')}
-                    className="w-full"
-                />
-            </div>
-
-            <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.statusFilter')}</label>
-                <Select value={filters.status} onValueChange={(v) => handleFilterChange('status', v)}>
-                  <SelectTrigger><SelectValue placeholder={t('validation.statusFilter')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Todos">{t('validation.allStatus')}</SelectItem>
-                    <SelectItem value="Pendente">{t('validation.pendingStatus')}</SelectItem>
-                    <SelectItem value="Aprovado">{t('validation.approvedStatus')}</SelectItem>
-                    <SelectItem value="Rejeitado">{t('validation.rejectedStatus')}</SelectItem>
-                  </SelectContent>
-                </Select>
-            </div>
-
-            <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.monthFilter')}</label>
-                <Select value={format(filters.month, 'yyyy-MM')} onValueChange={(v) => handleFilterChange('month', v)}>
-                  <SelectTrigger><SelectValue placeholder={t('validation.monthFilter')} /></SelectTrigger>
-                  <SelectContent>
-                    {monthOptions.map(m => (
-                      <SelectItem key={format(m, 'yyyy-MM')} value={format(m, 'yyyy-MM')}>
-                        {format(m, 'MMMM yyyy', { locale: pt })}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-            </div>
-
-            <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase">{t('validation.searchFilter')}</label>
-                <div className="relative w-full">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder={t('common.searchEmployee')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
-            </div>
-        </div>
-
-        <div className="flex justify-end pt-2 border-t border-dashed">
-            <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fetchJustifications(true)} 
-                disabled={isLoading || isRefreshing}
-                className="w-full sm:w-auto min-w-[120px]"
-            >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? t('validation.refreshing') : t('validation.refreshData')}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <Input
+            placeholder={t('common.searchEmployee')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-md"
+          />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={handleExportXLSX} disabled={isLoading || justifications.length === 0} className="w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />Download
             </Button>
+            <Button variant="outline" size="sm" onClick={() => fetchJustifications(true)} disabled={isLoading || isRefreshing} className="w-full sm:w-auto">
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />Atualizar
+            </Button>
+          </div>
         </div>
       </div>
 
       {isLoading ? (
         <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-                <div key={i} className="h-24 bg-muted/50 animate-pulse rounded-xl border border-border/50" />
-            ))}
+          {[1, 2, 3].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}
+        </div>
+      ) : justifications.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-center p-8 bg-muted/20 rounded-lg border-2 border-dashed">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">Nenhuma justificação encontrada</h3>
+          <p className="text-muted-foreground text-sm">Não há justificações correspondentes aos filtros selecionados.</p>
+          <Button variant="link" onClick={() => { setFilters(prev => ({ ...prev, status: 'Todos' })); setSearchQuery(''); setSelectedMonths(monthOptions.length > 0 ? [monthOptions[0]] : []); }}>
+            Limpar Filtros
+          </Button>
         </div>
       ) : (
-        <div className="space-y-8">
-            <JustificationsByUserList 
-                justifications={justifications} 
-                searchQuery={searchQuery}
-                onUpdateStatus={handleUpdateStatus} 
-                isLoading={false}
-            />
-        </div>
+        <JustificationsByUserList
+          justifications={justifications}
+          searchQuery={searchQuery}
+          onUpdateStatus={handleUpdateStatus}
+          isLoading={false}
+        />
       )}
     </div>
   );

@@ -11,6 +11,23 @@ const tNotif = (lang, type, statusKey, field) => {
     || translations.pt.notifications[type][field];
 };
 
+export const sendSubmissionNotification = async (userId, type) => {
+  if (!userId) return;
+  const lang = getLang();
+  const title = translations[lang]?.notifications?.[type]?.submittedTitle
+    || translations.pt.notifications[type]?.submittedTitle;
+  const message = translations[lang]?.notifications?.[type]?.submittedMsg
+    || translations.pt.notifications[type]?.submittedMsg;
+  if (!title || !message) return;
+  try {
+    await supabase.functions.invoke('send-push-notification', {
+      body: { userId, title, message, data: { url: '/historico' } },
+    });
+  } catch (err) {
+    console.error('[sendSubmissionNotification] Failed:', err);
+  }
+};
+
 export const sendApprovalNotification = async (userId, type, status, comment = '') => {
   if (!userId) return;
   const lang = getLang();

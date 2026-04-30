@@ -285,13 +285,17 @@ export const translations = {
         approvedTitle: "Correção Aprovada",
         approvedMsg: "A sua correção de registo foi aprovada.",
         rejectedTitle: "Correção Rejeitada",
-        rejectedMsg: "A sua correção de registo foi rejeitada."
+        rejectedMsg: "A sua correção de registo foi rejeitada.",
+        submittedTitle: "Correção Submetida",
+        submittedMsg: "A sua correção foi submetida e aguarda aprovação do encarregado."
       },
       correcao_mensal: {
         approvedTitle: "Correção Mensal Aprovada",
         approvedMsg: "A sua correção mensal foi aprovada.",
         rejectedTitle: "Correção Mensal Rejeitada",
-        rejectedMsg: "A sua correção mensal foi rejeitada."
+        rejectedMsg: "A sua correção mensal foi rejeitada.",
+        submittedTitle: "Correção Mensal Submetida",
+        submittedMsg: "A sua correção mensal foi submetida e aguarda aprovação do encarregado."
       },
       reasonPrefix: "Motivo:"
     }
@@ -582,13 +586,17 @@ export const translations = {
         approvedTitle: "Correction Approved",
         approvedMsg: "Your record correction was approved.",
         rejectedTitle: "Correction Rejected",
-        rejectedMsg: "Your record correction was rejected."
+        rejectedMsg: "Your record correction was rejected.",
+        submittedTitle: "Correction Submitted",
+        submittedMsg: "Your correction has been submitted and is awaiting supervisor approval."
       },
       correcao_mensal: {
         approvedTitle: "Monthly Correction Approved",
         approvedMsg: "Your monthly correction was approved.",
         rejectedTitle: "Monthly Correction Rejected",
-        rejectedMsg: "Your monthly correction was rejected."
+        rejectedMsg: "Your monthly correction was rejected.",
+        submittedTitle: "Monthly Correction Submitted",
+        submittedMsg: "Your monthly correction has been submitted and is awaiting supervisor approval."
       },
       reasonPrefix: "Reason:"
     }
@@ -879,13 +887,17 @@ export const translations = {
         approvedTitle: "Corrección Aprobada",
         approvedMsg: "Su corrección de registro fue aprobada.",
         rejectedTitle: "Corrección Rechazada",
-        rejectedMsg: "Su corrección de registro fue rechazada."
+        rejectedMsg: "Su corrección de registro fue rechazada.",
+        submittedTitle: "Corrección Enviada",
+        submittedMsg: "Su corrección fue enviada y está pendiente de aprobación del encargado."
       },
       correcao_mensal: {
         approvedTitle: "Corrección Mensual Aprobada",
         approvedMsg: "Su corrección mensual fue aprobada.",
         rejectedTitle: "Corrección Mensual Rechazada",
-        rejectedMsg: "Su corrección mensual fue rechazada."
+        rejectedMsg: "Su corrección mensual fue rechazada.",
+        submittedTitle: "Corrección Mensual Enviada",
+        submittedMsg: "Su corrección mensual fue enviada y está pendiente de aprobación del encargado."
       },
       reasonPrefix: "Motivo:"
     }
@@ -1176,13 +1188,17 @@ export const translations = {
         approvedTitle: "Correction Approuvée",
         approvedMsg: "Votre correction d'enregistrement a été approuvée.",
         rejectedTitle: "Correction Rejetée",
-        rejectedMsg: "Votre correction d'enregistrement a été rejetée."
+        rejectedMsg: "Votre correction d'enregistrement a été rejetée.",
+        submittedTitle: "Correction Soumise",
+        submittedMsg: "Votre correction a été soumise et est en attente d'approbation du responsable."
       },
       correcao_mensal: {
         approvedTitle: "Correction Mensuelle Approuvée",
         approvedMsg: "Votre correction mensuelle a été approuvée.",
         rejectedTitle: "Correction Mensuelle Rejetée",
-        rejectedMsg: "Votre correction mensuelle a été rejetée."
+        rejectedMsg: "Votre correction mensuelle a été rejetée.",
+        submittedTitle: "Correction Mensuelle Soumise",
+        submittedMsg: "Votre correction mensuelle a été soumise et est en attente d'approbation du responsable."
       },
       reasonPrefix: "Motif:"
     }

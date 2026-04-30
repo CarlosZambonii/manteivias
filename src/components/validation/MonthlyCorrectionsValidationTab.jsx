@@ -2,17 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, AlertCircle, Check, X, User, Calendar, Download } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, User, Calendar, Download, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { startOfMonth, endOfMonth, format, subMonths, parseISO, addHours } from 'date-fns';
+import { startOfMonth, endOfMonth, format, parseISO, addHours } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
 import * as XLSX from 'xlsx';
 import { sendApprovalNotification } from '@/services/NotificationService';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAvailableMonths } from '@/hooks/useAvailableMonths';
+import MonthMultiSelect from '@/components/ui/MonthMultiSelect';
 
 const getStatusVariant = (status) => {
   switch (status) {
@@ -28,14 +31,28 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
   const { t } = useLanguage();
   const [corrections, setCorrections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     employeeId: 'all',
     status: 'Pendente',
-    month: new Date(),
   });
+  const [selectedMonths, setSelectedMonths] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
+
+  const filterEmployeeId = filters.employeeId;
+  const filterStatus = filters.status;
+  const selectedMonthsKey = selectedMonths.map(m => format(m, 'yyyy-MM')).sort().join(',');
+
+  const monthOptions = useAvailableMonths('correcoes_mensais', 'mes');
+
+  useEffect(() => {
+    if (monthOptions.length > 0 && selectedMonths.length === 0) {
+      setSelectedMonths([monthOptions[0]]);
+    }
+  }, [monthOptions]);
 
   const fetchEmployees = useCallback(async () => {
     if (!user?.id) return;
@@ -48,17 +65,25 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
     }
   }, [user?.id]);
 
-  const fetchCorrections = useCallback(async () => {
-    setIsLoading(true);
+  const fetchCorrections = useCallback(async (isRefresh = false) => {
+    if (selectedMonths.length === 0) {
+      setCorrections([]);
+      setIsLoading(false);
+      setIsRefreshing(false);
+      return;
+    }
+    if (isRefresh) setIsRefreshing(true);
+    else setIsLoading(true);
+
     try {
       if (worksiteFilter && worksiteFilter.length === 0) {
           setCorrections([]);
-          setIsLoading(false);
           return;
       }
 
-      const fromDate = startOfMonth(filters.month);
-      const toDate = endOfMonth(filters.month);
+      const sorted = [...selectedMonths].sort((a, b) => a - b);
+      const fromDate = format(startOfMonth(sorted[0]), 'yyyy-MM-dd');
+      const toDate = format(endOfMonth(sorted[sorted.length - 1]), 'yyyy-MM-dd');
 
       let query = supabase
         .from('correcoes_mensais')
@@ -71,33 +96,38 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
             obra:obras(nome)
           )
         `)
-        .gte('mes', format(fromDate, 'yyyy-MM-dd'))
-        .lte('mes', format(toDate, 'yyyy-MM-dd'))
+        .gte('mes', fromDate)
+        .lte('mes', toDate)
         .order('data_solicitacao', { ascending: false });
 
-      if (filters.employeeId !== 'all') {
-        query = query.eq('usuario_id', filters.employeeId);
+      if (filterEmployeeId !== 'all') {
+        query = query.eq('usuario_id', filterEmployeeId);
       }
 
-      if (filters.status !== 'Todos') {
-        query = query.eq('status', filters.status);
+      if (filterStatus !== 'Todos') {
+        query = query.eq('status', filterStatus);
       }
 
       let { data, error } = await query;
       if (error) throw error;
-      
+
       if (worksiteFilter && data) {
          data = data.filter(c => c.alocacoes?.some(a => worksiteFilter.includes(a.obra_id)));
       }
 
-      setCorrections(data || []);
+      const selectedKeys = new Set(selectedMonths.map(m => format(m, 'yyyy-MM')));
+      const filtered = (data || []).filter(r =>
+        r.mes && selectedKeys.has(r.mes.substring(0, 7))
+      );
 
+      setCorrections(filtered);
     } catch (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: t('corrections.monthlyError') });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [filters, worksiteFilter, toast]);
+  }, [filterEmployeeId, filterStatus, selectedMonthsKey, worksiteFilter, toast, t]);
 
   useEffect(() => {
     fetchEmployees();
@@ -118,11 +148,19 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
       if (error) throw error;
 
       const correction = corrections.find(c => c.id === id);
+      if (correction && newStatus === 'Aprovado') {
+        const { error: deleteError } = await supabase
+          .from('registros_mensais')
+          .delete()
+          .eq('usuario_id', correction.usuario_id)
+          .eq('mes', correction.mes);
+        if (deleteError) throw deleteError;
+      }
       if (correction) {
         sendApprovalNotification(correction.usuario_id, 'correcao_mensal', newStatus);
       }
       toast({ variant: 'success', title: newStatus === 'Aprovado' ? t('corrections.monthlyApproved') : t('corrections.monthlyRejected') });
-      fetchCorrections();
+      fetchCorrections(true);
     } catch (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } finally {
@@ -135,7 +173,6 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
       toast({ variant: 'destructive', title: 'Erro', description: 'Não há dados para exportar.' });
       return;
     }
-
     setIsExporting(true);
     try {
       const exportData = corrections.map(c => ({
@@ -148,45 +185,45 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
         validado_por: c.validado_por || '',
         data_validacao: c.data_validacao ? format(new Date(c.data_validacao), 'yyyy-MM-dd HH:mm') : ''
       }));
-
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Correcoes_Mensais");
       XLSX.writeFile(workbook, `correcoes_mensais_validacao_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     } catch (error) {
-      console.error('Error exporting data:', error);
       toast({ variant: 'destructive', title: 'Erro', description: 'Ocorreu um erro ao exportar os dados.' });
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    if (key === 'month') {
-      const [year, month] = value.split('-').map(Number);
-      value = new Date(year, month - 1, 15);
-    }
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const monthOptions = Array.from({ length: 12 }, (_, i) => subMonths(new Date(), i));
   const employeeOptions = [
     { value: 'all', label: 'Todos os Colaboradores' },
     ...employees.map(e => ({ value: String(e.id), label: e.nome }))
   ];
 
+  const filteredCorrections = searchQuery
+    ? corrections.filter(c => c.usuario?.nome?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : corrections;
+
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full flex-1">
+    <div className="space-y-6">
+      <div className="bg-card p-4 rounded-lg border shadow-sm space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Combobox
             options={employeeOptions}
             value={filters.employeeId}
-            onChange={(v) => handleFilterChange('employeeId', v)}
+            onChange={(v) => setFilters(prev => ({ ...prev, employeeId: v }))}
             placeholder="Filtrar por colaborador..."
             searchPlaceholder="Procurar colaborador..."
+            noResultsText="Nenhum colaborador encontrado."
+            className="w-full"
           />
-          <Select value={filters.status} onValueChange={(v) => handleFilterChange('status', v)}>
+          <MonthMultiSelect
+            months={monthOptions}
+            selectedMonths={selectedMonths}
+            onChange={setSelectedMonths}
+          />
+          <Select value={filters.status} onValueChange={(v) => setFilters(prev => ({ ...prev, status: v }))}>
             <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Todos">Todos</SelectItem>
@@ -195,36 +232,38 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
               <SelectItem value="Rejeitado">Rejeitado</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={format(filters.month, 'yyyy-MM')} onValueChange={(v) => handleFilterChange('month', v)}>
-            <SelectTrigger><SelectValue placeholder="Mês" /></SelectTrigger>
-            <SelectContent>
-              {monthOptions.map(m => (
-                <SelectItem key={format(m, 'yyyy-MM')} value={format(m, 'yyyy-MM')}>
-                  {format(m, 'MMMM yyyy', { locale: pt })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExportXLSX} 
-          disabled={isLoading || corrections.length === 0 || isExporting}
-          className="w-full sm:w-auto h-10 px-4"
-        >
-          {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-          Download
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <Input
+            placeholder="Pesquisar colaborador..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-md"
+          />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={handleExportXLSX} disabled={isLoading || corrections.length === 0 || isExporting} className="w-full sm:w-auto">
+              {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              Download
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => fetchCorrections(true)} disabled={isLoading || isRefreshing} className="w-full sm:w-auto">
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />Atualizar
+            </Button>
+          </div>
+        </div>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center h-64 items-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-      ) : corrections.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 text-center p-4 border rounded-lg bg-muted/20">
-          <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold">Nenhuma correção mensal</h3>
-          <p className="text-muted-foreground text-sm">Não há correções mensais correspondentes.</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}
+        </div>
+      ) : filteredCorrections.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-center p-8 bg-muted/20 rounded-lg border-2 border-dashed">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">Nenhuma correção mensal encontrada</h3>
+          <p className="text-muted-foreground text-sm">Não há correções mensais correspondentes aos filtros selecionados.</p>
+          <Button variant="link" onClick={() => { setFilters(prev => ({ ...prev, status: 'Todos', employeeId: 'all' })); setSearchQuery(''); setSelectedMonths(monthOptions.length > 0 ? [monthOptions[0]] : []); }}>
+            Limpar Filtros
+          </Button>
         </div>
       ) : (
         <div className="rounded-md border">
@@ -240,7 +279,7 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {corrections.map((c) => (
+              {filteredCorrections.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -251,7 +290,6 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                       {/* Safe month formatting adding 12 hours to avoid timezone shifts */}
                        <span>{format(addHours(parseISO(c.mes), 12), 'MM/yyyy')}</span>
                     </div>
                   </TableCell>

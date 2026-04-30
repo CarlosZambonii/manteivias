@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
 import { sendApprovalNotification } from '@/services/NotificationService';
+import { useAvailableMonths } from '@/hooks/useAvailableMonths';
+import MonthMultiSelect from '@/components/ui/MonthMultiSelect';
 
 const HolidaysValidationTab = ({ worksiteFilter }) => {
   const { user, loading: authLoading } = useAuth();
@@ -57,31 +59,38 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
   }, [saveHolidaysOffline]);
 
   const [justifications, setJustifications] = useState([]);
-  const [publicHolidays, setPublicHolidays] = useState([]); 
+  const [publicHolidays, setPublicHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); 
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [error, setError] = useState(null);
+  const [selectedMonths, setSelectedMonths] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
-  
-  // Filter state
+
   const [statusFilter, setStatusFilter] = useState('Pendente');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'data_envio', direction: 'descending' });
+
+  const monthOptions = useAvailableMonths('justificação', 'data_envio');
+  const selectedMonthsKey = selectedMonths.map(m => format(m, 'yyyy-MM')).sort().join(',');
+
+  useEffect(() => {
+    if (monthOptions.length > 0 && selectedMonths.length === 0) {
+      setSelectedMonths([monthOptions[0]]);
+    }
+  }, [monthOptions]);
 
   // Action states
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionDialog, setActionDialog] = useState({ open: false, type: null, item: null });
 
-  // Use primitive for dependency
-  const selectedMonthTime = selectedMonth.getTime();
-
   // Main Data Fetching - Memoized to prevent infinite loops
   const fetchData = useCallback(async (isRefresh = false) => {
+    if (selectedMonths.length === 0) {
+      setJustifications([]);
+      setLoading(false);
+      return;
+    }
     if (isRefresh) setLoading(true);
-    
-    // Optimistic loading from offline data first using ref to avoid dependency loop
+
     const currentOfflineData = offlineDataRef.current;
     if (!isRefresh && currentOfflineData && currentOfflineData.length > 0 && !worksiteFilter) {
         setJustifications(currentOfflineData);
@@ -89,8 +98,7 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
     } else {
         setLoading(true);
     }
-    
-    // If offline, stop here
+
     if (!navigator.onLine) {
         setLoading(false);
         return;
@@ -119,19 +127,19 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
         .from('tipos_justificação')
         .select('id, codigo')
         .in('codigo', ['FE', 'FP']);
-      
+
       if (typesError) throw new Error(`Erro ao buscar tipos de justificação: ${typesError.message}`);
       if (!typesData || typesData.length === 0) {
         throw new Error('Tipos de justificação (FE, FP) não encontrados na configuração.');
       }
-      
+
       const holidayTypeIds = typesData.map(t => t.id);
 
-      // 2. Fetch Public Holidays
-      const currentMonth = new Date(selectedMonthTime);
-      const start = startOfMonth(currentMonth);
-      const end = endOfMonth(currentMonth);
-      
+      // 2. Fetch Public Holidays (range of all selected months)
+      const sortedSel = [...selectedMonths].sort((a, b) => a - b);
+      const start = startOfMonth(sortedSel[0]);
+      const end = endOfMonth(sortedSel[sortedSel.length - 1]);
+
       const { data: holidaysData, error: holidaysError } = await supabase
         .from('feriados')
         .select('*')
@@ -165,6 +173,9 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
         .lte('data_envio', end.toISOString())
         .order('data_envio', { ascending: false });
 
+      // Filter to only selected months (client-side for non-contiguous selection)
+      const selectedKeys = new Set(selectedMonths.map(m => format(m, 'yyyy-MM')));
+
       if (validUserIds) {
           query = query.in('usuario_id', validUserIds);
       }
@@ -196,6 +207,7 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
         .filter(item => {
             if (!item.usuarios) return false;
             if (!item.dias || !Array.isArray(item.dias)) return false;
+            if (item.data_envio && !selectedKeys.has(item.data_envio.substring(0, 7))) return false;
             return true;
         });
 
@@ -226,7 +238,7 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonthTime, worksiteFilter, toast]);
+  }, [selectedMonthsKey, worksiteFilter, toast]);
 
   useEffect(() => {
     fetchData();
@@ -430,8 +442,6 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
     setSortConfig({ key, direction });
   };
 
-  const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, i) => subMonths(new Date(), i)), []);
-
   if (authLoading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
@@ -445,21 +455,12 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
     
     <div className="space-y-6">
       <div className="bg-card p-4 rounded-lg border shadow-sm space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Select value={format(selectedMonth, 'yyyy-MM')} onValueChange={(v) => {
-                const [year, month] = v.split('-').map(Number);
-                setSelectedMonth(new Date(year, month - 1, 15));
-            }}>
-              <SelectTrigger><SelectValue placeholder="Mês" /></SelectTrigger>
-              <SelectContent>
-                {monthOptions.map(m => (
-                  <SelectItem key={format(m, 'yyyy-MM')} value={format(m, 'yyyy-MM')}>
-                    {format(m, 'MMMM yyyy', { locale: pt })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <MonthMultiSelect
+              months={monthOptions}
+              selectedMonths={selectedMonths}
+              onChange={setSelectedMonths}
+            />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -532,13 +533,16 @@ const HolidaysValidationTab = ({ worksiteFilter }) => {
       <div className="space-y-4">
           {loading ? (
               Array(3).fill(0).map((_, i) => (
-                  <div key={i} className="h-24 bg-muted/30 rounded-xl animate-pulse border border-border/50" />
+                  <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />
               ))
           ) : filteredAndSortedJustifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center p-8 bg-muted/20 rounded-lg border-2 border-dashed">
                 <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold">{t('validation.noRequests')}</h3>
                 <p className="text-muted-foreground text-sm">Não há pedidos para os filtros selecionados.</p>
+                <Button variant="link" onClick={() => { setStatusFilter('Todos'); setSearchQuery(''); setSelectedMonths(monthOptions.length > 0 ? [monthOptions[0]] : []); }}>
+                  Limpar Filtros
+                </Button>
               </div>
           ) : (
               <div className="mt-4">

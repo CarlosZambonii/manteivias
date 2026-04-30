@@ -26,6 +26,14 @@ const CorrectionActions = ({ correction, onUpdateStatus, className }) => {
 
       if (error) throw error;
 
+      if (status === 'Aprovado' && correction.registro_ponto_id) {
+        const { error: deleteError } = await supabase
+          .from('registros_ponto')
+          .delete()
+          .eq('id', correction.registro_ponto_id);
+        if (deleteError) throw deleteError;
+      }
+
       logAcao(user, {
         acao: 'Edição',
         entidade: 'Correção de Ponto',

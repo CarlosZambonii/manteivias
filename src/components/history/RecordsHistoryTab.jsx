@@ -201,15 +201,8 @@ const RecordsHistoryTab = ({ month }) => {
           }
       }
 
-      // Mark records with approved or pending corrections
-      const canceledIds = new Set(approvedCorrections.map(c => c.registro_ponto_id).filter(Boolean));
-      const correctedDates = new Set(approvedCorrections.map(c => c.data_correcao));
-
+      // Mark records with pending corrections
       regularRecords = regularRecords.map(r => {
-          const dateKey = format(parseISO(r.hora_inicio_real), 'yyyy-MM-dd');
-          if (canceledIds.has(r.id) || correctedDates.has(dateKey)) {
-              return { ...r, status_validacao: 'Cancelado pela Correção' };
-          }
           if (pendingIds.has(r.id)) {
               return { ...r, hasPendingCorrection: true };
           }

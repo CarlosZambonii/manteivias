@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO } from 'date-fns';
+import { sendSubmissionNotification } from '@/services/NotificationService';
 import { pt } from 'date-fns/locale';
 import { Combobox } from '@/components/ui/combobox';
 import { motion } from 'framer-motion';
@@ -101,12 +102,8 @@ const MonthlyCorrectionModal = ({ isOpen, onOpenChange, record, onCorrectionSubm
         usuario_id: user.id,
         mes: record.mes,
         data_solicitacao: new Date().toISOString(),
-        status: 'Aprovado', // Explicitly set to Approved
-        validado_por: user.id, // Current user
-        data_validacao: new Date().toISOString(), // Current timestamp
+        status: 'Pendente',
       };
-
-      console.log('🚀 [MonthlyCorrection] Submitting Payload:', correctionPayload);
 
       // 3. Insert Correction Header
       const { data: correctionData, error: correctionError } = await supabase
@@ -114,42 +111,10 @@ const MonthlyCorrectionModal = ({ isOpen, onOpenChange, record, onCorrectionSubm
         .insert(correctionPayload)
         .select()
         .single();
-        
-      if (correctionError) {
-        console.error('❌ [MonthlyCorrection] Insert Error:', correctionError);
-        throw correctionError;
-      }
 
-      console.log('✅ [MonthlyCorrection] Insert Success:', correctionData);
+      if (correctionError) throw correctionError;
 
-      // 4. VERIFICATION STEP
-      if (correctionData.status !== 'Aprovado') {
-        console.error('⚠️ [MonthlyCorrection] STATUS MISMATCH! Expected "Aprovado", got:', correctionData.status);
-        console.warn('⚠️ [MonthlyCorrection] Attempting immediate update to force "Aprovado"...');
-        
-        const { data: updatedData, error: updateError } = await supabase
-            .from('correcoes_mensais')
-            .update({ 
-                status: 'Aprovado', 
-                validado_por: user.id, 
-                data_validacao: new Date().toISOString() 
-            })
-            .eq('id', correctionData.id)
-            .select()
-            .single();
-            
-        if (updateError) {
-            console.error('❌ [MonthlyCorrection] Force Update Failed:', updateError);
-            throw new Error(`Estado incorreto detectado (${correctionData.status}) e falha ao corrigir: ${updateError.message}`);
-        }
-        
-        console.log('✅ [MonthlyCorrection] Status forced via update:', updatedData);
-        if(updatedData.status !== 'Aprovado') {
-             throw new Error(`Falha crítica: O registo foi criado mas mantém-se no estado "${updatedData.status}" apesar das tentativas de aprovação.`);
-        }
-      }
-
-      // 5. Insert Allocations
+      // 4. Insert Allocations
       const allocationRecords = filledAllocations.map(alloc => ({
         correcao_mensal_id: correctionData.id,
         obra_id: Number(alloc.worksiteId),
@@ -167,15 +132,16 @@ const MonthlyCorrectionModal = ({ isOpen, onOpenChange, record, onCorrectionSubm
         throw allocationError;
       }
       
-      // 6. Success Feedback
-      toast({ 
-        variant: 'success', 
-        title: 'Correção aprovada!', 
-        description: 'A correção mensal foi registada e aprovada com sucesso.' 
+      // 5. Success Feedback
+      sendSubmissionNotification(user.id, 'correcao_mensal');
+      toast({
+        variant: 'success',
+        title: 'Pedido enviado',
+        description: 'A sua correção mensal foi submetida e aguarda aprovação do encarregado.'
       });
-      
+
       if (onCorrectionSubmitted) {
-        onCorrectionSubmitted({ ...correctionData, allocations: allocationRecords, status: 'Aprovado' });
+        onCorrectionSubmitted({ ...correctionData, allocations: allocationRecords });
       }
       onOpenChange(false);
 
@@ -262,7 +228,7 @@ const MonthlyCorrectionModal = ({ isOpen, onOpenChange, record, onCorrectionSubm
             <DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose>
             <Button type="submit" disabled={isLoading || isFetchingWorksites}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Aprovar Correção
+              Submeter Correção
             </Button>
           </DialogFooter>
         </form>

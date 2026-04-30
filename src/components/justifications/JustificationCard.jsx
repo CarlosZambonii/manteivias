@@ -111,7 +111,7 @@ const JustificationCard = ({ justification, onUpdateStatus, onEdit, onDelete, cl
     else window.dispatchEvent(new CustomEvent('request-delete-justification', { detail: justification }));
   };
 
-  const canModify = justification.status_validacao !== 'Cancelado';
+  const canModify = ['Pendente', 'Rejeitado'].includes(justification.status_validacao);
 
   return (
     <Card className={cn("overflow-hidden border border-border/60 shadow-sm hover:shadow-lg transition-all duration-300 bg-card group", justification.status_validacao === 'Cancelado' && 'opacity-60 bg-muted/30', className)}>

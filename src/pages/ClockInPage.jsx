@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, AlertTriangle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTime } from '@/contexts/TimeContext';
@@ -17,7 +17,7 @@ import { useAutoCloseNotificationManager } from '@/hooks/AutoCloseNotificationMa
 
 const ClockInPage = () => {
   const navigate = useNavigate();
-  const { isClockedIn, clockOut } = useTime();
+  const { isClockedIn, clockOut, isLoadingTime } = useTime();
   const { user } = useAuth();
   const { checkAndAutoClose, error: autoCloseError } = useAutoCloseRecords();
   const { toast } = useToast();
@@ -85,7 +85,11 @@ const ClockInPage = () => {
             </Alert>
         )}
 
-        {isClockedIn ? <ClockOutForm /> : <ClockInForm />}
+        {isLoadingTime ? (
+          <div className="flex items-center justify-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : isClockedIn ? <ClockOutForm /> : <ClockInForm />}
         
       </motion.div>
     </>

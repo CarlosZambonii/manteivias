@@ -48,10 +48,6 @@ self.addEventListener('push', (event) => {
       badge: '/badge-72x72.png',
       data: data.data || {},
       vibrate: [100, 50, 100],
-      actions: [
-        { action: 'open', title: 'Abrir App' }
-      ],
-      requireInteraction: true
     };
 
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

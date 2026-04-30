@@ -59,7 +59,7 @@ const JustificationForm = ({ isModal = false, initialData = null, onSuccess = nu
     const fetchTypes = async () => {
       if (!user) return;
       setIsFetchingTypes(true);
-      const { data, error } = await supabase.from('tipos_justificação').select('id, nome');
+      const { data, error } = await supabase.from('tipos_justificação').select('id, nome, codigo');
       if (error) {
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
@@ -168,11 +168,34 @@ const JustificationForm = ({ isModal = false, initialData = null, onSuccess = nu
         }));
 
         const { error: justifError } = await supabase.from('justificação').insert(justificationsToInsert);
-        
+
         setIsLoading(false);
         if (justifError) {
             toast({ variant: 'destructive', title: t('justification.errorCreate'), description: justifError.message });
             return;
+        }
+
+        // Notify Ana Catarina if this is a férias request
+        const selectedTypeObj = justificationTypes.find(t => String(t.id) === String(selectedType));
+        if (selectedTypeObj && ['FE', 'FP'].includes(selectedTypeObj.codigo)) {
+            supabase
+                .from('usuarios')
+                .select('id')
+                .ilike('nome', '%Ana Catarina%')
+                .limit(1)
+                .maybeSingle()
+                .then(({ data: anaCatarina }) => {
+                    if (anaCatarina?.id) {
+                        supabase.functions.invoke('send-push-notification', {
+                            body: {
+                                userId: anaCatarina.id,
+                                title: 'Férias a aprovar',
+                                message: 'Existe um novo pedido de férias aguardando a sua aprovação.',
+                                data: { url: '/validacao' },
+                            },
+                        });
+                    }
+                });
         }
 
         toast({ variant: 'success', title: t('justification.successTitle'), description: t('justification.successDesc') });

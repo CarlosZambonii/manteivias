@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Loader2, ArrowRight } from 'lucide-react'; 
@@ -63,6 +63,7 @@ const ClockInForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingWorksites, setIsFetchingWorksites] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const submissionInProgressRef = useRef(false);
 
   useEffect(() => {
     setSessionActive(true);
@@ -140,6 +141,14 @@ const ClockInForm = () => {
   };
 
   const handleSubmission = async () => {
+    if (submissionInProgressRef.current) return;
+
+    const lockKey = 'clock_in_submitting';
+    const lockTs = localStorage.getItem(lockKey);
+    if (lockTs && Date.now() - Number(lockTs) < 30000) return;
+
+    submissionInProgressRef.current = true;
+    localStorage.setItem(lockKey, String(Date.now()));
     setIsLoading(true);
 
     try {
@@ -151,9 +160,8 @@ const ClockInForm = () => {
       });
       
       if (checkError) throw checkError;
-      if (checkData?.exists) { 
+      if (checkData?.exists) {
         toast({ variant: 'destructive', title: t('clock.duplicateTitle'), description: t('clock.duplicateDesc') });
-        setIsLoading(false);
         setStep(1);
         return;
       }
@@ -221,6 +229,8 @@ const ClockInForm = () => {
        toast({ variant: "destructive", title: t('common.error'), description: error.message });
        setStep(1);
     } finally {
+        submissionInProgressRef.current = false;
+        localStorage.removeItem('clock_in_submitting');
         setIsLoading(false);
     }
   };
