@@ -29,7 +29,7 @@ const HolidayCard = ({ item, onApprove, onReject, formatDates, getStatusBadge, p
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {/* Left: Employee Info */}
-          <div className="flex items-center gap-3 w-1/3 min-w-[200px]">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <Avatar className="h-10 w-10 border border-border/50">
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 {getInitials(item.usuarios?.nome)}
@@ -64,7 +64,7 @@ const HolidayCard = ({ item, onApprove, onReject, formatDates, getStatusBadge, p
           </div>
 
           {/* Right: Status & Action Trigger */}
-          <div className="flex items-center justify-end gap-3 w-1/3">
+          <div className="flex items-center justify-end gap-3 flex-shrink-0">
             <div className="flex flex-col items-end">
                 {getStatusBadge(item.status_validacao)}
                 <span className="text-[10px] text-muted-foreground mt-1">

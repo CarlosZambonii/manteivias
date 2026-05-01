@@ -11,7 +11,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
     <div className="bg-card rounded-xl border border-border/60 p-4 mb-5">
       <div className="flex flex-wrap items-center gap-3">
         <Select value={filters.obra_id || 'todas'} onValueChange={(v) => set('obra_id', v)}>
-          <SelectTrigger className="w-44 bg-secondary border-border/60 text-sm h-9">
+          <SelectTrigger className="w-full sm:w-44 bg-secondary border-border/60 text-sm h-9">
             <SelectValue placeholder="Obra" />
           </SelectTrigger>
           <SelectContent>
@@ -23,7 +23,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
         </Select>
 
         <Select value={filters.period || 'mes_atual'} onValueChange={(v) => set('period', v)}>
-          <SelectTrigger className="w-44 bg-secondary border-border/60 text-sm h-9">
+          <SelectTrigger className="w-full sm:w-44 bg-secondary border-border/60 text-sm h-9">
             <SelectValue placeholder="Período" />
           </SelectTrigger>
           <SelectContent>
@@ -35,7 +35,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
         </Select>
 
         <Select value={filters.tipo_acao || 'todos'} onValueChange={(v) => set('tipo_acao', v)}>
-          <SelectTrigger className="w-40 bg-secondary border-border/60 text-sm h-9">
+          <SelectTrigger className="w-full sm:w-40 bg-secondary border-border/60 text-sm h-9">
             <SelectValue placeholder="Tipo de ação" />
           </SelectTrigger>
           <SelectContent>
@@ -49,7 +49,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
         </Select>
 
         <Select value={filters.perfil || 'todos-perfis'} onValueChange={(v) => set('perfil', v)}>
-          <SelectTrigger className="w-40 bg-secondary border-border/60 text-sm h-9">
+          <SelectTrigger className="w-full sm:w-40 bg-secondary border-border/60 text-sm h-9">
             <SelectValue placeholder="Perfil" />
           </SelectTrigger>
           <SelectContent>
@@ -61,7 +61,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
           </SelectContent>
         </Select>
 
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar utilizador..."

@@ -148,7 +148,7 @@ const AdminAdjustmentsPage = () => {
                 <p className="mt-1 text-sm text-muted-foreground">Não há correções com os filtros selecionados.</p>
               </div>
             ) : (
-              <div className="rounded-lg border overflow-hidden">
+              <div className="overflow-x-auto rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>

@@ -14,8 +14,9 @@ export default function FolhaFiscalPreview({ data, showAv, onClose }) {
     if (!contentRef.current || generating) return;
     setGenerating(true);
     try {
+      const fileLabel = data.periodoLabel ? data.periodoLabel.replace(/\//g, "-").replace(/ /g, "_") : `${data.mes}_${data.ano}`;
       const obra = data.obra ? `_${data.obra.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
-      await generatePDF(contentRef.current, `Folha_Fiscal_${data.mes}_${data.ano}${obra}.pdf`);
+      await generatePDF(contentRef.current, `Folha_Fiscal_${fileLabel}${obra}.pdf`);
     } finally {
       setGenerating(false);
     }
@@ -28,7 +29,7 @@ export default function FolhaFiscalPreview({ data, showAv, onClose }) {
           <span className="text-white font-semibold text-sm">
             Preview — Folha Fiscal {showAv ? "com AV" : "sem AV"}
           </span>
-          <span className="text-xs text-gray-400 ml-2">{data.mes} {data.ano} | {data.obra}</span>
+          <span className="text-xs text-gray-400 ml-2">{data.periodoLabel || `${data.mes} ${data.ano}`} | {data.obra}</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setZoom(z => Math.max(0.4, z - 0.1))} className="p-1.5 rounded hover:bg-gray-700 text-gray-300">

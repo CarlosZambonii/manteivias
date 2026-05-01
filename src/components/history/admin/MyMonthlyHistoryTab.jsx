@@ -113,7 +113,7 @@ const MyMonthlyHistoryTab = () => {
           <p className="text-muted-foreground text-sm">Não há correções mensais neste período.</p>
         </div>
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>

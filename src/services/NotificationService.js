@@ -63,18 +63,27 @@ const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
-export const registerPushSubscription = async () => {
+export const registerPushSubscription = async (dbUserId = null) => {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    
-    // Extract numeric db_id from metadata or check if we can query it directly
-    const userId = user.user_metadata?.db_id;
+    let userId = dbUserId;
+
     if (!userId) {
-      console.error('No database user ID found in metadata for push subscription.');
-      return null;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return null;
+
+      const { data: dbUser } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_uuid', authUser.id)
+        .single();
+
+      if (!dbUser?.id) {
+        console.error('[Push] Could not resolve database user ID for push subscription.');
+        return null;
+      }
+      userId = dbUser.id;
     }
 
     const registration = await navigator.serviceWorker.ready;

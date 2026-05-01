@@ -11,7 +11,7 @@ import { TimeProvider } from '@/contexts/TimeContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { requestNotificationPermission } from '@/utils/NotificationPermissionManager';
-import { subscribeToNotifications } from '@/services/NotificationService.js';
+import { subscribeToNotifications, registerPushSubscription } from '@/services/NotificationService.js';
 import { isIOS } from '@/utils/iosDetector';
 
 // Register Service Worker and Request Notification Permissions
@@ -29,6 +29,7 @@ if ('serviceWorker' in navigator) {
           requestNotificationPermission().then(granted => {
             if (granted) {
               subscribeToNotifications(null);
+              registerPushSubscription();
             }
           });
         }

@@ -36,7 +36,7 @@ function tdBase(rowBg, extra = {}) {
 }
 
 export default function ResumoPessoalJustificacoesTemplate({ data }) {
-  const { mes, ano, colaboradores } = data;
+  const { mes, ano, periodoLabel, colaboradores } = data;
   const mesLabel = (mes || "").toUpperCase();
 
   return (
@@ -53,7 +53,7 @@ export default function ResumoPessoalJustificacoesTemplate({ data }) {
             RESUMO MENSAL PESSOAL — JUSTIFICAÇÕES
           </div>
           <div style={{ fontWeight: "500", fontSize: 10, color: "#2E74B5", marginTop: 2 }}>
-            {mesLabel} {ano} · Todos os Colaboradores
+            {periodoLabel || `${mesLabel} ${ano}`} · Todos os Colaboradores
           </div>
         </div>
       </div>

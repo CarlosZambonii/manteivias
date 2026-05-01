@@ -40,7 +40,7 @@ const TH_SUB  = { ...CELL, backgroundColor: "#2E74B5", color: "#FFFFFF", fontWei
 const TH_SAB  = { ...CELL, backgroundColor: "#C55A11", color: "#FFFFFF", fontWeight: "700", fontSize: 7 };
 
 export default function FolhaFiscalTemplate({ data, showAv = false }) {
-  const { mes, ano, obra, empresa = "Manteivias", colaboradores, registos } = data;
+  const { mes, ano, obra, empresa = "Manteivias", colaboradores, registos, startDate, endDate } = data;
 
   const mesNum    = useMemo(() => mesNumero(mes), [mes]);
   const daysCount = useMemo(() => getDaysInMonth(ano, mesNum), [ano, mesNum]);
@@ -54,9 +54,10 @@ export default function FolhaFiscalTemplate({ data, showAv = false }) {
     return map;
   }, [registos]);
 
-  const firstDay = `01/${String(mesNum).padStart(2, "0")}/${ano}`;
-  const lastDay  = `${String(daysCount).padStart(2, "0")}/${String(mesNum).padStart(2, "0")}/${ano}`;
-  const periodo  = `${firstDay} - ${lastDay}`;
+  const fmtD = str => { const [y, m, d] = str.split("-"); return `${d}/${m}/${y}`; };
+  const periodo = startDate && endDate
+    ? `${fmtD(startDate)} - ${fmtD(endDate)}`
+    : `01/${String(mesNum).padStart(2, "0")}/${ano} - ${String(daysCount).padStart(2, "0")}/${String(mesNum).padStart(2, "0")}/${ano}`;
 
   const weekdayOrder = showAv ? [1, 2, 3, 4, 5, 6, 0] : [1, 2, 3, 4, 5];
   const colsPerWeekday = showAv ? 3 : 2;

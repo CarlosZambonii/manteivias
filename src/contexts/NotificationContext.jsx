@@ -22,7 +22,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     // Check for user existence from AuthContext instead of session
     if (user && permission === 'granted' && isSupported) {
-      NotificationService.registerPushSubscription();
+      NotificationService.registerPushSubscription(user.id);
     }
   }, [user, permission, isSupported]);
 

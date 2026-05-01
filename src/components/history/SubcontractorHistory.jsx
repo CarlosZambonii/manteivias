@@ -103,7 +103,7 @@ const SubcontractorHistory = () => {
         />
       </div>
 
-      <div className="rounded-lg border overflow-hidden">
+      <div className="overflow-x-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>

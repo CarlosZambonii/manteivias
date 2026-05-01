@@ -56,7 +56,7 @@ const AdminPage = () => {
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="registrations">
-                    <div className="bg-card border rounded-lg shadow-lg overflow-hidden">
+                    <div className="bg-card border rounded-lg shadow-lg overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -103,7 +103,7 @@ const AdminPage = () => {
                     </div>
                 </TabsContent>
                 <TabsContent value="adjustments">
-                    <div className="bg-card border rounded-lg shadow-lg overflow-hidden">
+                    <div className="bg-card border rounded-lg shadow-lg overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>

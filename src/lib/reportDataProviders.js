@@ -28,16 +28,26 @@ function periodToDates(period) {
   return { startDate: period.startDate, endDate: period.endDate };
 }
 
+function fmtDate(str) {
+  const [y, m, d] = str.split("-");
+  return `${d}/${m}/${y}`;
+}
+
 function periodToMesAno(period) {
-  if (!period) return { mes: "", ano: new Date().getFullYear() };
+  if (!period) return { mes: "", ano: new Date().getFullYear(), periodoLabel: "" };
   if (period.mode === "month") {
-    return { mes: MONTHS_PT[period.month], ano: period.year };
+    const mes = MONTHS_PT[period.month];
+    const ano = period.year;
+    return { mes, ano, periodoLabel: `${mes.toUpperCase()} ${ano}` };
   }
   if (period.startDate) {
-    const d = new Date(period.startDate);
-    return { mes: MONTHS_PT[d.getMonth()], ano: d.getFullYear() };
+    const d = new Date(period.startDate + "T00:00:00");
+    const periodoLabel = period.endDate
+      ? `${fmtDate(period.startDate)} - ${fmtDate(period.endDate)}`
+      : fmtDate(period.startDate);
+    return { mes: MONTHS_PT[d.getMonth()], ano: d.getFullYear(), periodoLabel };
   }
-  return { mes: "", ano: new Date().getFullYear() };
+  return { mes: "", ano: new Date().getFullYear(), periodoLabel: "" };
 }
 
 function parseHoursToDecimal(hoursString) {
@@ -82,7 +92,7 @@ export async function getObras() {
 // ─── 2. Folha de Ponto — Justificações (AdminFlow) ───────────────────────────
 export async function getFolhaPontoJustificacoes(period) {
   const { startDate, endDate } = periodToDates(period);
-  const { mes, ano } = periodToMesAno(period);
+  const { mes, ano, periodoLabel } = periodToMesAno(period);
 
   // Fetch all active users
   const { data: usuarios, error: usersError } = await supabase
@@ -118,13 +128,13 @@ export async function getFolhaPontoJustificacoes(period) {
     nome:   u.nome || "",
   }));
 
-  return { mes, ano, obra: "", colaboradores, registos };
+  return { mes, ano, periodoLabel, obra: "", colaboradores, registos };
 }
 
 // ─── 3. Resumo Mensal Pessoal — Obras (AdminFlow) ────────────────────────────
 export async function getResumoPessoalObras(period) {
   const { startDate, endDate } = periodToDates(period);
-  const { mes, ano } = periodToMesAno(period);
+  const { mes, ano, periodoLabel } = periodToMesAno(period);
 
   const { data, error } = await supabase.rpc("export_clock_report_v2", {
     start_date: startDate,
@@ -161,13 +171,13 @@ export async function getResumoPessoalObras(period) {
     };
   });
 
-  return { mes, ano, obraIds, colaboradores };
+  return { mes, ano, periodoLabel, obraIds, colaboradores };
 }
 
 // ─── 4. Resumo Mensal Pessoal — Justificações (AdminFlow) ────────────────────
 export async function getResumoPessoalJustificacoes(period) {
   const { startDate, endDate } = periodToDates(period);
-  const { mes, ano } = periodToMesAno(period);
+  const { mes, ano, periodoLabel } = periodToMesAno(period);
 
   const { data, error } = await supabase.rpc("export_clock_report_v2", {
     start_date: startDate,
@@ -201,13 +211,13 @@ export async function getResumoPessoalJustificacoes(period) {
     },
   }));
 
-  return { mes, ano, colaboradores };
+  return { mes, ano, periodoLabel, colaboradores };
 }
 
 // ─── 5. Folha Fiscal (EncarregadoFlow) ───────────────────────────────────────
 export async function getFolhaFiscal(period, obraId, showAv) {
   const { startDate, endDate } = periodToDates(period);
-  const { mes, ano } = periodToMesAno(period);
+  const { mes, ano, periodoLabel } = periodToMesAno(period);
 
   const mesNum = parseInt(startDate?.split("-")[1]) || new Date().getMonth() + 1;
 
@@ -282,5 +292,5 @@ export async function getFolhaFiscal(period, obraId, showAv) {
     if (obraData?.nome) obraLabel = `${obraId} – ${obraData.nome}`;
   }
 
-  return { mes, ano, obra: obraLabel, empresa: "Manteivias", colaboradores, registos };
+  return { mes, ano, periodoLabel, startDate, endDate, obra: obraLabel, empresa: "Manteivias", colaboradores, registos };
 }

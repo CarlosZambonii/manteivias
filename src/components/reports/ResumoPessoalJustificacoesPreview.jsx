@@ -14,7 +14,8 @@ export default function ResumoPessoalJustificacoesPreview({ data, onClose }) {
     if (!contentRef.current || generating) return;
     setGenerating(true);
     try {
-      await generatePDF(contentRef.current, `Resumo_Justificacoes_${data.mes}_${data.ano}.pdf`);
+      const fileLabel = data.periodoLabel ? data.periodoLabel.replace(/\//g, "-").replace(/ /g, "_") : `${data.mes}_${data.ano}`;
+      await generatePDF(contentRef.current, `Resumo_Justificacoes_${fileLabel}.pdf`);
     } finally {
       setGenerating(false);
     }
@@ -25,7 +26,7 @@ export default function ResumoPessoalJustificacoesPreview({ data, onClose }) {
       <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-700 shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-white font-semibold text-sm">Preview — Resumo Mensal Pessoal Justificações</span>
-          <span className="text-xs text-gray-400 ml-2">{data.mes} {data.ano}</span>
+          <span className="text-xs text-gray-400 ml-2">{data.periodoLabel || `${data.mes} ${data.ano}`}</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setZoom(z => Math.max(0.4, z - 0.1))} className="p-1.5 rounded hover:bg-gray-700 text-gray-300">

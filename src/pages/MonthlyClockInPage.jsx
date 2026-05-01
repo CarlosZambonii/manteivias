@@ -207,7 +207,7 @@ const MonthlyClockInPage = () => {
                         key={index}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-end gap-4 p-4 border rounded-lg bg-background/50"
+                        className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 p-4 border rounded-lg bg-background/50"
                     >
                       <div className="flex-1 space-y-2">
                         <Label htmlFor={`worksite-${index}`} className="text-xs">Obra</Label>
@@ -221,7 +221,7 @@ const MonthlyClockInPage = () => {
                           triggerClassName="h-10"
                         />
                       </div>
-                      <div className="w-28 space-y-2">
+                      <div className="w-full sm:w-28 space-y-2">
                         <Label htmlFor={`percentage-${index}`} className="text-xs">Percentagem (%)</Label>
                         <Input id={`percentage-${index}`} type="number" placeholder="%" value={alloc.percentage} onChange={e => handleAllocationChange(index, 'percentage', e.target.value)} />
                       </div>

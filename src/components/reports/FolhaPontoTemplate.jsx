@@ -103,7 +103,7 @@ function Legenda() {
 }
 
 export default function FolhaPontoTemplate({ data, showAv = false }) {
-  const { mes, ano, colaboradores, registos } = data;
+  const { mes, ano, periodoLabel, colaboradores, registos } = data;
 
   const mesNum    = useMemo(() => mesNumero(mes), [mes]);
   const daysCount = useMemo(() => getDaysInMonth(ano, mesNum), [ano, mesNum]);
@@ -135,7 +135,7 @@ export default function FolhaPontoTemplate({ data, showAv = false }) {
             FOLHA DE PONTO — JUSTIFICAÇÕES
           </div>
           <div style={{ fontWeight: "500", fontSize: 10, color: "#2E74B5", marginTop: 2 }}>
-            {mesLabel} {ano} · Todos os Colaboradores
+            {periodoLabel || `${mesLabel} ${ano}`} · Todos os Colaboradores
           </div>
         </div>
       </div>
