@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle, ChevronLeft, Loader2, Plus, Trash2 } from 'lucide-react';
-import { format, subMonths, startOfMonth } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Combobox } from '@/components/ui/combobox';
 import { formatObraOption } from '@/utils/formatObraDisplay';
@@ -69,6 +69,27 @@ const MonthlyClockInPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const filledAllocations = worksiteAllocations.filter(
+      alloc => alloc.worksiteId && alloc.percentage
+    );
+
+    if (filledAllocations.length === 0) {
+      toast({ variant: 'destructive', title: 'Nenhuma obra selecionada', description: 'Por favor, adicione pelo menos uma obra e a sua percentagem.' });
+      return;
+    }
+
+    const totalPercentage = filledAllocations.reduce((acc, curr) => acc + (Number(curr.percentage) || 0), 0);
+    if (totalPercentage !== 100) {
+      toast({ variant: 'destructive', title: 'Percentagem inválida', description: 'A soma das percentagens das obras deve ser exatamente 100%.' });
+      return;
+    }
+
+    if (!selectedMonth) {
+      toast({ variant: 'destructive', title: 'Mês em falta', description: 'Por favor, selecione o mês de referência.' });
+      return;
+    }
+
     if (submissionInProgressRef.current) return;
 
     const lockKey = 'monthly_clock_in_submitting';
@@ -79,37 +100,20 @@ const MonthlyClockInPage = () => {
     localStorage.setItem(lockKey, String(Date.now()));
     setIsLoading(true);
 
-    const filledAllocations = worksiteAllocations.filter(
-      alloc => alloc.worksiteId && alloc.percentage
-    );
+    // Use date strings built directly from selectedMonth to avoid DST/timezone bugs
+    const mesDate = `${selectedMonth}-01`;
+    const [yearNum, monthNum] = selectedMonth.split('-').map(Number);
+    const nextYear = monthNum === 12 ? yearNum + 1 : yearNum;
+    const nextMonth = monthNum === 12 ? 1 : monthNum + 1;
+    const nextMesDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
-    if (filledAllocations.length === 0) {
-      toast({ variant: 'destructive', title: 'Nenhuma obra selecionada', description: 'Por favor, adicione pelo menos uma obra e a sua percentagem.' });
-      setIsLoading(false);
-      return;
-    }
-
-    const totalPercentage = filledAllocations.reduce((acc, curr) => acc + (Number(curr.percentage) || 0), 0);
-    if (totalPercentage !== 100) {
-      toast({ variant: 'destructive', title: 'Percentagem inválida', description: 'A soma das percentagens das obras deve ser exatamente 100%.' });
-      setIsLoading(false);
-      return;
-    }
-
-    if (!selectedMonth) {
-      toast({ variant: 'destructive', title: 'Mês em falta', description: 'Por favor, selecione o mês de referência.' });
-      setIsLoading(false);
-      return;
-    }
-    
-    const monthDate = startOfMonth(new Date(`${selectedMonth}-15`));
-    
     try {
         const { data: existingRecord, error: checkError } = await supabase
             .from('registros_mensais')
             .select('id')
             .eq('usuario_id', user.id)
-            .eq('mes', monthDate.toISOString().slice(0, 10))
+            .gte('mes', mesDate)
+            .lt('mes', nextMesDate)
             .neq('status_validacao', 'Cancelado')
             .limit(1);
 
@@ -118,15 +122,17 @@ const MonthlyClockInPage = () => {
         if (existingRecord && existingRecord.length > 0) {
             toast({ variant: 'destructive', title: 'Registo Duplicado', description: 'Já existe um registo mensal ativo para este mês.' });
             setIsLoading(false);
+            submissionInProgressRef.current = false;
+            localStorage.removeItem(lockKey);
             return;
         }
 
         const recordsToInsert = filledAllocations.map(alloc => ({
             usuario_id: user.id,
-            mes: monthDate.toISOString(),
+            mes: mesDate,
             obra_id: Number(alloc.worksiteId),
             percentagem: Number(alloc.percentage),
-            status_validacao: 'Pendente', 
+            status_validacao: 'Pendente',
             data_submissao: new Date().toISOString(),
         }));
 
