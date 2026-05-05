@@ -250,12 +250,36 @@ const NotificationTestPanel = () => {
               )}
               {permission === 'granted' && !userStatus?.hasPushSubscription && (
                 <Button size="sm" variant="outline" className="mt-2" onClick={async () => {
-                  const sub = await NotificationService.registerPushSubscription(user?.id);
-                  toast({
-                    title: sub ? 'Subscrição registada' : 'Erro ao registar subscrição',
-                    variant: sub ? 'default' : 'destructive',
-                  });
-                  setTimeout(fetchUserStatus, 1000);
+                  try {
+                    // Passo 1: buscar chave VAPID
+                    const { data: vapidData, error: vapidError } = await supabase.functions.invoke('get-vapid-public-key');
+                    if (vapidError || !vapidData?.publicKey) throw new Error('Falha ao buscar chave VAPID: ' + (vapidError?.message || 'sem chave'));
+
+                    // Passo 2: subscrever push no browser
+                    const sw = await navigator.serviceWorker.ready;
+                    const padding = '='.repeat((4 - vapidData.publicKey.length % 4) % 4);
+                    const base64 = (vapidData.publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const key = new Uint8Array([...atob(base64)].map(c => c.charCodeAt(0)));
+                    const existing = await sw.pushManager.getSubscription();
+                    if (existing) await existing.unsubscribe();
+                    const sub = await sw.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+
+                    // Passo 3: guardar na BD
+                    const j = sub.toJSON();
+                    const { error: dbError } = await supabase.from('push_subscriptions').upsert({
+                      user_id: user?.id,
+                      endpoint: j.endpoint,
+                      p256dh: j.keys.p256dh,
+                      auth: j.keys.auth,
+                      user_agent: navigator.userAgent,
+                    }, { onConflict: 'endpoint' });
+                    if (dbError) throw new Error('Erro ao guardar na BD: ' + dbError.message);
+
+                    toast({ title: 'Subscrição registada com sucesso' });
+                    setTimeout(fetchUserStatus, 1000);
+                  } catch (e) {
+                    toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+                  }
                 }}>
                   Registar subscrição neste dispositivo
                 </Button>
