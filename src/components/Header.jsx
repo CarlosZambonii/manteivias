@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, KeyRound, Bell, FileText, ArrowRight, ScrollText } from 'lucide-react';
+import { LogOut, KeyRound, Bell, FileText, ArrowRight, ScrollText, FlaskConical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -166,6 +166,12 @@ const Header = () => {
                   <DropdownMenuItem onSelect={() => navigate('/admin/logs')} className="gap-2">
                     <ScrollText className="w-4 h-4" />
                     Central de Logs
+                  </DropdownMenuItem>
+                )}
+                {isAdminStar && (
+                  <DropdownMenuItem onSelect={() => navigate('/test-panel')} className="gap-2">
+                    <FlaskConical className="w-4 h-4" />
+                    Painel de Testes
                   </DropdownMenuItem>
                 )}
                 {(canViewValidations || canViewFleets || canViewOrganizational || canViewDataAnalysis || isAdminStar) && <DropdownMenuSeparator />}

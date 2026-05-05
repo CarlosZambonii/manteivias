@@ -60,13 +60,20 @@ const applyTime = (baseLisbonISO: string, timeStr: string): string =>
 
 // ── Main handler ──────────────────────────────────────────────────────────────
 
-Deno.serve(async () => {
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
   // Guard: only run at 23:30 Lisbon time
   const now = new Date();
   const parts = lisbonDateParts(now);
   const g = (t: string) => parseInt(parts.find(x => x.type === t)?.value ?? '0');
   if (g('hour') !== 23 || g('minute') !== 30) {
-    return new Response('Not 23:30 Lisbon', { status: 200 });
+    return new Response('Not 23:30 Lisbon', { status: 200, headers: corsHeaders });
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -175,5 +182,5 @@ Deno.serve(async () => {
   }
 
   console.log(`[auto-close-cron] Closed ${closedCount} record(s).`);
-  return new Response(`Closed ${closedCount} record(s)`, { status: 200 });
+  return new Response(`Closed ${closedCount} record(s)`, { status: 200, headers: corsHeaders });
 });

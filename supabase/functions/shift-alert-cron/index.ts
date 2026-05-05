@@ -11,7 +11,7 @@ const SHIFT_ALERTS = [
   {
     hour: 12, minute: 0, tag: 'shift-alert-12pm',
     check: (records: any[]) => {
-      const openManha = records.find((r) => r.turno === 'Manha' && !r.hora_fim_real);
+      const openManha = records.find((r) => r.turno === 'Manhã' && !r.hora_fim_real);
       return openManha
         ? { title: 'Turno da Manhã', message: 'Registre sua saída da manhã e entrada da tarde.' }
         : null;
@@ -20,7 +20,7 @@ const SHIFT_ALERTS = [
   {
     hour: 13, minute: 0, tag: 'shift-alert-1pm',
     check: (records: any[]) => {
-      const closedManha = records.find((r) => r.turno === 'Manha' && r.hora_fim_real);
+      const closedManha = records.find((r) => r.turno === 'Manhã' && r.hora_fim_real);
       const hasTarde = records.find((r) => r.turno === 'Tarde');
       return closedManha && !hasTarde
         ? { title: 'Turno da Tarde', message: 'Não registrou entrada no turno da tarde.' }
@@ -56,14 +56,21 @@ const SHIFT_ALERTS = [
   },
 ];
 
-Deno.serve(async () => {
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   if (!vapidPublicKey || !vapidPrivateKey) {
-    return new Response('VAPID keys not configured', { status: 500 });
+    return new Response('VAPID keys not configured', { status: 500, headers: corsHeaders });
   }
 
   // Get current time in Europe/Lisbon (handles DST automatically)
@@ -82,7 +89,7 @@ Deno.serve(async () => {
     (a) => a.hour === currentHour && a.minute === currentMinute,
   );
   if (matchingAlerts.length === 0) {
-    return new Response('No alerts at this time', { status: 200 });
+    return new Response('No alerts at this time', { status: 200, headers: corsHeaders });
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -104,7 +111,7 @@ Deno.serve(async () => {
     .select('user_id, endpoint, p256dh, auth');
 
   if (subError || !subscriptions?.length) {
-    return new Response('No subscriptions', { status: 200 });
+    return new Response('No subscriptions', { status: 200, headers: corsHeaders });
   }
 
   for (const sub of subscriptions) {
@@ -151,5 +158,5 @@ Deno.serve(async () => {
     }
   }
 
-  return new Response('OK', { status: 200 });
+  return new Response('OK', { status: 200, headers: corsHeaders });
 });
