@@ -248,6 +248,18 @@ const NotificationTestPanel = () => {
               {permission !== 'granted' && permission !== 'denied' && !iosNeedsPWA && (
                 <Button size="sm" className="mt-2" onClick={subscribe}>Ativar notificações</Button>
               )}
+              {permission === 'granted' && !userStatus?.hasPushSubscription && (
+                <Button size="sm" variant="outline" className="mt-2" onClick={async () => {
+                  const sub = await NotificationService.registerPushSubscription(user?.id);
+                  toast({
+                    title: sub ? 'Subscrição registada' : 'Erro ao registar subscrição',
+                    variant: sub ? 'default' : 'destructive',
+                  });
+                  setTimeout(fetchUserStatus, 1000);
+                }}>
+                  Registar subscrição neste dispositivo
+                </Button>
+              )}
             </>
           )}
         </CardContent>
