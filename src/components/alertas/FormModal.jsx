@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, Paperclip } from 'lucide-react';
+import { X, ChevronDown, Paperclip, FileX } from 'lucide-react';
 
 const MODULOS = [
   "Registos", "Férias", "Exportação", "Notificações",
@@ -11,11 +11,22 @@ const MESES = [
   "Maio 2026", "Junho 2026", "Julho 2026", "Agosto 2026",
 ];
 
+const TICKET_TIPOS = [
+  { value: "geral",    label: "Criar Ticket" },
+  { value: "ajuda",    label: "Pedir Ajuda" },
+  { value: "erro",     label: "Reportar Erro" },
+  { value: "melhoria", label: "Sugerir Melhoria" },
+];
+
+const tipoConfigs = {
+  geral:    { color: "blue",   fields: ["modulo", "prioridade", "descricao", "anexo"],           prioridades: ["Baixa", "Média", "Alta"] },
+  ajuda:    { color: "sky",    fields: ["modulo", "descricao", "anexo"],                          prioridades: null },
+  erro:     { color: "rose",   fields: ["modulo", "prioridade", "descricao", "passos", "anexo"],  prioridades: ["Baixa", "Média", "Alta"] },
+  melhoria: { color: "violet", fields: ["modulo", "descricao", "beneficio", "anexo"],             prioridades: null },
+};
+
 const configs = {
-  ticket:     { title: "Criar Ticket",          color: "blue",    fields: ["modulo", "prioridade", "descricao", "anexo"],        prioridades: ["Baixa", "Média", "Alta"] },
-  ajuda:      { title: "Pedir Ajuda",           color: "sky",     fields: ["modulo", "descricao", "anexo"],                      prioridades: null },
-  erro:       { title: "Reportar Erro",         color: "rose",    fields: ["modulo", "prioridade", "descricao", "passos", "anexo"], prioridades: ["Baixa", "Média", "Alta"] },
-  melhoria:   { title: "Sugerir Melhoria",      color: "violet",  fields: ["modulo", "descricao", "beneficio", "anexo"],         prioridades: null },
+  ticket:     { title: "Criar Ticket",          color: "blue",    fields: [],                                                     prioridades: null },
   atualizacao:{ title: "Adicionar Atualização", color: "emerald", fields: ["versao", "data", "modulos", "items", "notas"],        prioridades: null },
   futuro:     { title: "Adicionar ao Futuro",   color: "indigo",  fields: ["modulo", "prioridade", "descricao", "horizonte"],    prioridades: ["Baixa", "Média", "Alta"] },
 };
@@ -61,13 +72,18 @@ function SelectField({ label, options, placeholder, ring, value, onChange }) {
 export default function FormModal({ type, onClose, onSubmit }) {
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
+  const [anexo, setAnexo] = useState(null);
 
-  useEffect(() => { setForm({}); setError(''); }, [type]);
+  useEffect(() => { setForm({}); setError(''); setAnexo(null); }, [type]);
 
   if (!type) return null;
 
   const cfg = configs[type];
-  const c = colorMap[cfg.color];
+  const activeTipoCfg = type === 'ticket' ? tipoConfigs[form.tipoTicket || 'geral'] : null;
+  const effectiveFields = activeTipoCfg ? activeTipoCfg.fields : cfg.fields;
+  const effectivePrioridades = activeTipoCfg ? activeTipoCfg.prioridades : cfg.prioridades;
+  const effectiveColor = activeTipoCfg ? activeTipoCfg.color : cfg.color;
+  const c = colorMap[effectiveColor];
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
   const toggleModule = (mod) => (e) => {
@@ -79,26 +95,31 @@ export default function FormModal({ type, onClose, onSubmit }) {
 
   const handleSubmit = () => {
     if (!form.titulo?.trim()) { setError('O título é obrigatório.'); return; }
-    onSubmit?.(form);
+    onSubmit?.(form, anexo);
     onClose();
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-xl border border-[#1e2a3a] bg-[#0b1120] shadow-2xl overflow-hidden"
+        className="relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-xl border border-[#1e2a3a] bg-[#0b1120] shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle — mobile only */}
+        <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-slate-700" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1e2a3a]">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#1e2a3a] shrink-0">
           <div>
             <span className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold border mb-1.5 ${c.badge}`}>
               {cfg.title}
             </span>
-            <h2 className="text-lg font-semibold text-white">{cfg.title}</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-white">{cfg.title}</h2>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />
@@ -106,7 +127,7 @@ export default function FormModal({ type, onClose, onSubmit }) {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div className="px-5 sm:px-6 py-5 space-y-4 overflow-y-auto flex-1">
 
           {/* Título */}
           <Field label="Título *">
@@ -120,8 +141,23 @@ export default function FormModal({ type, onClose, onSubmit }) {
             {error && <p className="text-xs text-rose-400 mt-1">{error}</p>}
           </Field>
 
+          {/* Tipo de ticket (só para type === "ticket") */}
+          {type === "ticket" && (
+            <SelectField
+              label="Tipo de pedido *"
+              options={TICKET_TIPOS.map(t => t.label)}
+              placeholder="Selecione o tipo de pedido"
+              ring={colorMap['blue'].ring}
+              value={TICKET_TIPOS.find(t => t.value === form.tipoTicket)?.label || ''}
+              onChange={(e) => {
+                const found = TICKET_TIPOS.find(t => t.label === e.target.value);
+                setForm(f => ({ titulo: f.titulo, tipoTicket: found?.value || '' }));
+              }}
+            />
+          )}
+
           {/* Módulo */}
-          {cfg.fields.includes("modulo") && (
+          {effectiveFields.includes("modulo") && (
             <SelectField
               label="Módulo *"
               options={MODULOS}
@@ -133,10 +169,10 @@ export default function FormModal({ type, onClose, onSubmit }) {
           )}
 
           {/* Prioridade */}
-          {cfg.fields.includes("prioridade") && (
+          {effectiveFields.includes("prioridade") && (
             <SelectField
               label="Prioridade *"
-              options={cfg.prioridades}
+              options={effectivePrioridades}
               placeholder="Selecione a prioridade"
               ring={c.ring}
               value={form.prioridade}
@@ -145,12 +181,12 @@ export default function FormModal({ type, onClose, onSubmit }) {
           )}
 
           {/* Descrição */}
-          {cfg.fields.includes("descricao") && (
+          {effectiveFields.includes("descricao") && (
             <Field
               label={
-                type === "erro" ? "Descrição do erro *"
-                : type === "melhoria" ? "Descrição da melhoria *"
-                : type === "ajuda" ? "Descrição da dúvida *"
+                form.tipoTicket === "erro" ? "Descrição do erro *"
+                : form.tipoTicket === "melhoria" ? "Descrição da melhoria *"
+                : form.tipoTicket === "ajuda" ? "Descrição da dúvida *"
                 : "Descrição *"
               }
             >
@@ -159,10 +195,10 @@ export default function FormModal({ type, onClose, onSubmit }) {
                 value={form.descricao || ''}
                 onChange={set('descricao')}
                 placeholder={
-                  type === "erro" ? "O que aconteceu? Quando ocorre?"
-                  : type === "ajuda" ? "Descreva a sua dúvida ou dificuldade..."
-                  : type === "melhoria" ? "O que pretende melhorar e como?"
-                  : "Descreva o problema em detalhe..."
+                  form.tipoTicket === "erro" ? "O que aconteceu? Quando ocorre?"
+                  : form.tipoTicket === "ajuda" ? "Descreva a sua dúvida ou dificuldade..."
+                  : form.tipoTicket === "melhoria" ? "O que pretende melhorar e como?"
+                  : "Descreva o assunto em detalhe..."
                 }
                 className={`${inputCls(c.ring)} resize-none`}
               />
@@ -170,7 +206,7 @@ export default function FormModal({ type, onClose, onSubmit }) {
           )}
 
           {/* Passos para reproduzir */}
-          {cfg.fields.includes("passos") && (
+          {effectiveFields.includes("passos") && (
             <Field label="Passos para reproduzir">
               <textarea
                 rows={3}
@@ -183,7 +219,7 @@ export default function FormModal({ type, onClose, onSubmit }) {
           )}
 
           {/* Benefício esperado */}
-          {cfg.fields.includes("beneficio") && (
+          {effectiveFields.includes("beneficio") && (
             <Field label="Benefício esperado">
               <textarea
                 rows={2}
@@ -196,7 +232,7 @@ export default function FormModal({ type, onClose, onSubmit }) {
           )}
 
           {/* Horizonte (futuro) */}
-          {cfg.fields.includes("horizonte") && (
+          {effectiveFields.includes("horizonte") && (
             <SelectField
               label="Horizonte de implementação *"
               options={["Próximas 2 semanas","Próximo mês","Próximos 3 meses","Próximos 6 meses","Sem prazo definido"]}
@@ -208,12 +244,35 @@ export default function FormModal({ type, onClose, onSubmit }) {
           )}
 
           {/* Anexo */}
-          {cfg.fields.includes("anexo") && (
+          {effectiveFields.includes("anexo") && (
             <Field label="Anexos (opcional)">
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-[#1e2a3a] hover:border-slate-500 bg-[#0b1525] cursor-pointer transition-colors">
-                <Paperclip className="w-4 h-4 text-slate-500" />
-                <span className="text-sm text-slate-500">Clique para adicionar ficheiro ou imagem</span>
-              </div>
+              {anexo ? (
+                <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-[#1e2a3a] bg-[#0b1525]">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="text-sm text-slate-300 truncate">{anexo.name}</span>
+                    <span className="text-xs text-slate-600 shrink-0">({(anexo.size / 1024).toFixed(0)} KB)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAnexo(null)}
+                    className="p-1 rounded hover:bg-white/5 text-slate-500 hover:text-rose-400 transition-colors shrink-0"
+                  >
+                    <FileX className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-[#1e2a3a] hover:border-slate-500 bg-[#0b1525] cursor-pointer transition-colors">
+                  <Paperclip className="w-4 h-4 text-slate-500" />
+                  <span className="text-sm text-slate-500">Clique para adicionar ficheiro ou imagem</span>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                    className="hidden"
+                    onChange={(e) => setAnexo(e.target.files?.[0] || null)}
+                  />
+                </label>
+              )}
             </Field>
           )}
 
@@ -298,7 +357,7 @@ export default function FormModal({ type, onClose, onSubmit }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#1e2a3a] flex items-center justify-between gap-3">
+        <div className="px-5 sm:px-6 py-4 border-t border-[#1e2a3a] flex items-center justify-between gap-3 shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-[#1e2a3a] text-sm text-slate-400 hover:text-white hover:border-slate-500 transition-colors"

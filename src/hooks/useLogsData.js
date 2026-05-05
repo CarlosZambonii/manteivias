@@ -50,6 +50,7 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
   const [acessosRaw, setAcessosRaw] = useState([]);
   const [acoesRaw, setAcoesRaw] = useState([]);
   const [obrasDisponiveis, setObrasDisponiveis] = useState([]);
+  const [onlineUserIds, setOnlineUserIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -62,7 +63,7 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
 
       let qAcessos = supabase
         .from('logs_acessos')
-        .select('*, usuarios:user_id(id, nome, tipo_usuario), obras:obra_id(id, nome)')
+        .select('id, user_id, perfil, dispositivo, sessao_ativa, obra_id, data_hora')
         .gte('data_hora', inicio.toISOString())
         .lte('data_hora', fim.toISOString())
         .order('data_hora', { ascending: false })
@@ -70,7 +71,7 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
 
       let qAcoes = supabase
         .from('logs_acoes')
-        .select('*, usuarios:user_id(id, nome, tipo_usuario), obras:obra_id(id, nome)')
+        .select('id, user_id, acao, entidade, modulo, descricao, obra_id, data_hora')
         .gte('data_hora', inicio.toISOString())
         .lte('data_hora', fim.toISOString())
         .order('data_hora', { ascending: false })
@@ -91,18 +92,59 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
         qAcoes = qAcoes.eq('acao', acaoMap[tipo_acao] || tipo_acao);
       }
 
-      const [obrasRes, acessosRes, acoesRes] = await Promise.all([
+      const trintaMinAtras = new Date(Date.now() - 30 * 60 * 1000);
+      const [obrasRes, acessosRes, acoesRes, onlineAcessosRes, onlineAcoesRes] = await Promise.all([
         supabase.from('obras').select('id, nome').order('nome'),
         qAcessos,
         qAcoes,
+        supabase.from('logs_acessos').select('user_id').gte('data_hora', trintaMinAtras.toISOString()),
+        supabase.from('logs_acoes').select('user_id').gte('data_hora', trintaMinAtras.toISOString()),
       ]);
 
-      setObrasDisponiveis(obrasRes.data || []);
-      setAcessosRaw(acessosRes.data || []);
-      setAcoesRaw(acoesRes.data || []);
 
-      if (acessosRes.error) console.warn('logs_acessos:', acessosRes.error.message);
-      if (acoesRes.error) console.warn('logs_acoes:', acoesRes.error.message);
+      const erros = [];
+      if (acessosRes.error) erros.push(`logs_acessos: ${acessosRes.error.message}`);
+      if (acoesRes.error) erros.push(`logs_acoes: ${acoesRes.error.message}`);
+      if (erros.length > 0) {
+        setError(erros.join(' | '));
+      }
+
+      const acessos = acessosRes.data || [];
+      const acoes = acoesRes.data || [];
+
+      const obraMap = Object.fromEntries((obrasRes.data || []).map(o => [String(o.id), o]));
+
+      const allUserIds = [...new Set([
+        ...acessos.map(r => r.user_id),
+        ...acoes.map(r => r.user_id),
+      ].filter(Boolean))];
+
+      let userMap = {};
+      if (allUserIds.length > 0) {
+        const { data: usersData } = await supabase
+          .from('usuarios')
+          .select('id, nome, tipo_usuario')
+          .in('id', allUserIds);
+        userMap = Object.fromEntries((usersData || []).map(u => [String(u.id), u]));
+      }
+
+      const enrich = (row) => ({
+        ...row,
+        usuarios: userMap[String(row.user_id)] || null,
+        obras: obraMap[String(row.obra_id)] || null,
+      });
+
+      const onlineIds = new Set(
+        [...(onlineAcessosRes.data || []), ...(onlineAcoesRes.data || [])]
+          .map(r => String(r.user_id))
+          .filter(Boolean)
+      );
+
+      setObrasDisponiveis(obrasRes.data || []);
+      setAcessosRaw(acessos.map(enrich));
+      setAcoesRaw(acoes.map(enrich));
+      setOnlineUserIds(onlineIds);
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -112,6 +154,16 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('logs-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_acessos' }, fetchData)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_acoes' }, fetchData)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [fetchData]);
 
   const acessosData = useMemo(() =>
@@ -209,8 +261,6 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
     return Object.values(byObra).map(o => ({ nome: o.nome, acessos: o.acessos, registos: o.registos, colaboradores: o.colaboradores.size }));
   }, [acessosRaw, acoesRaw]);
 
-  // Subempreiteiros são users com tipo_usuario = 'admin_sub'
-  // A obra associada vem do obra_id registado em cada ação
   const subempreiteirosData = useMemo(() => {
     const bySub = {};
     const obraByUser = {};
@@ -244,6 +294,84 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
     }));
   }, [acoesRaw, acessosRaw]);
 
+  const todayStats = useMemo(() => {
+    const hoje = format(new Date(), 'yyyy-MM-dd');
+
+    const acessosHoje = acessosRaw.filter(r => r.data_hora?.startsWith(hoje));
+    const acoesHoje = acoesRaw.filter(r => r.data_hora?.startsWith(hoje));
+
+    const byUser = {};
+
+    acessosHoje.forEach(r => {
+      const uid = String(r.user_id);
+      if (!uid || uid === 'null') return;
+      if (!byUser[uid]) byUser[uid] = {
+        nome: r.usuarios?.nome || 'Desconhecido',
+        tipo: r.usuarios?.tipo_usuario || '',
+        acessos: 0, criações: 0, correcoes: 0, edicoes: 0, acoes: 0, obras: new Set(),
+      };
+      byUser[uid].acessos++;
+      if (r.obra_id) byUser[uid].obras.add(String(r.obra_id));
+    });
+
+    acoesHoje.forEach(r => {
+      const uid = String(r.user_id);
+      if (!uid || uid === 'null') return;
+      if (!byUser[uid]) byUser[uid] = {
+        nome: r.usuarios?.nome || 'Desconhecido',
+        tipo: r.usuarios?.tipo_usuario || '',
+        acessos: 0, criações: 0, correcoes: 0, edicoes: 0, acoes: 0, obras: new Set(),
+      };
+      byUser[uid].acoes++;
+      if (r.acao === 'Criação') byUser[uid].criações++;
+      if (r.acao === 'Correção') byUser[uid].correcoes++;
+      if (r.acao === 'Edição') byUser[uid].edicoes++;
+      if (r.obra_id) byUser[uid].obras.add(String(r.obra_id));
+    });
+
+    const byObra = {};
+    [...acessosHoje, ...acoesHoje].forEach(r => {
+      if (!r.obra_id) return;
+      const obraId = String(r.obra_id);
+      const nome = r.obras?.nome || `Obra ${r.obra_id}`;
+      if (!byObra[obraId]) byObra[obraId] = { nome, users: new Set(), acoes: 0, registos: 0, correcoes: 0 };
+      if (r.user_id) byObra[obraId].users.add(String(r.user_id));
+      if (r.acao === 'Criação' || r.acao === 'Edição') byObra[obraId].registos++;
+      if (r.acao === 'Correção') byObra[obraId].correcoes++;
+      if (r.acao) byObra[obraId].acoes++;
+    });
+
+    const utilizadoresAtivosHoje = Object.entries(byUser)
+      .map(([uid, u]) => ({
+        uid,
+        nome: u.nome,
+        categoria: tipoToCategoria(u.tipo),
+        acessos: u.acessos,
+        criações: u.criações,
+        correcoes: u.correcoes,
+        edicoes: u.edicoes,
+        acoes: u.acoes,
+        obras: u.obras.size,
+        online: onlineUserIds.has(uid),
+      }))
+      .sort((a, b) => (b.acoes + b.acessos) - (a.acoes + a.acessos));
+
+    const obrasAtivasHoje = Object.values(byObra)
+      .map(o => ({ nome: o.nome, colaboradores: o.users.size, acoes: o.acoes, registos: o.registos, correcoes: o.correcoes }))
+      .sort((a, b) => b.acoes - a.acoes);
+
+    return {
+      onlineAgoraCount: onlineUserIds.size,
+      usuariosAtivosHojeCount: Object.keys(byUser).length,
+      registosCriadosHoje: acoesHoje.filter(r => r.acao === 'Criação').length,
+      correcoesHoje: acoesHoje.filter(r => r.acao === 'Correção').length,
+      acoesTotaisHoje: acoesHoje.length,
+      obrasAtivasHojeCount: Object.keys(byObra).length,
+      utilizadoresAtivosHoje,
+      obrasAtivasHoje,
+    };
+  }, [acessosRaw, acoesRaw, onlineUserIds]);
+
   const topCollaborators = useMemo(() =>
     [...colaboradoresData]
       .sort((a, b) => b.acessos - a.acessos).slice(0, 10)
@@ -261,7 +389,7 @@ export function useLogsData({ obra_id, period, tipo_acao, perfil } = {}) {
   [utilizacaoData]);
 
   return {
-    acessosData, acoesData, statsCards,
+    acessosData, acoesData, statsCards, todayStats,
     utilizacaoData, colaboradoresData, obrasData, subempreiteirosData,
     topCollaborators, topObras, topPages,
     obrasDisponiveis, loading, error, refresh: fetchData,

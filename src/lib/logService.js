@@ -19,6 +19,7 @@ export function logAcesso(user, obraId = null) {
     dispositivo: getDispositivo(),
     sessao_ativa: true,
     obra_id: obraId ?? null,
+    data_hora: new Date().toISOString(),
   }).then(({ error }) => {
     if (error) console.warn('[log] acesso:', error.message);
   });
@@ -33,6 +34,7 @@ export function logAcao(user, { acao, entidade, modulo, descricao = '', obraId =
     modulo,
     descricao,
     obra_id: obraId ?? null,
+    data_hora: new Date().toISOString(),
   }).then(({ error }) => {
     if (error) console.warn('[log] acao:', error.message);
   });

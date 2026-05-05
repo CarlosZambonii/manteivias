@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function RankingFilter({ mode, onModeChange, metric, onMetricChange, metricOptions, limit, onLimitChange }) {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
       <div className="flex items-center rounded-lg border border-border/60 overflow-hidden bg-secondary h-8">
         <button
           onClick={() => onModeChange("top")}

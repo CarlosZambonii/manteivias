@@ -71,6 +71,7 @@ export const AuthProvider = ({ children }) => {
                 try {
                     const parsedUser = JSON.parse(storedUser);
                     setUser(parsedUser);
+                    logAcesso(parsedUser);
                     if (parsedUser.id) {
                         refreshUserData(parsedUser.id).catch(console.warn);
                     }
@@ -83,9 +84,10 @@ export const AuthProvider = ({ children }) => {
                     .select('*')
                     .eq('auth_uuid', session.user.id)
                     .single();
-                
+
                 if (profile) {
                     fetchAndSetUser(profile);
+                    logAcesso(profile);
                 }
             }
         } catch (e) {

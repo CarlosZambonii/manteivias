@@ -1,8 +1,9 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2, HardHat } from "lucide-react";
+import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2, HardHat, Radio } from "lucide-react";
 
 const menuItems = [
+  { id: "hoje", label: "Hoje — Tempo Real", icon: Radio },
   { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
   { id: "acessos", label: "Acessos", icon: LogIn },
   { id: "acoes", label: "Ações", icon: MousePointerClick },

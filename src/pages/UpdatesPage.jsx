@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import StatCard from '@/components/alertas/StatCard';
 import TicketCard from '@/components/alertas/TicketCard';
 import UpdateCard from '@/components/alertas/UpdateCard';
@@ -14,18 +15,21 @@ import { useAlertas } from '@/hooks/useAlertas';
 
 const UpdatesPage = () => {
   const navigate = useNavigate();
-  const { tickets, updates, stats, loading, addTicket, deleteTicket, addUpdate, deleteUpdate } = useAlertas();
+  const { toast } = useToast();
+  const { tickets, updates, stats, loading, addTicket, deleteTicket, addUpdate, deleteUpdate, updateTicketStatus, fetchComments, addComment } = useAlertas();
 
   const [activeTab, setActiveTab] = useState('atualizacoes');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [openForm, setOpenForm] = useState(null);
   const [filters, setFilters] = useState({ search: '', tipo: '', estado: '', prioridade: '', modulo: '' });
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = async (formData, file) => {
     if (openForm === 'atualizacao') {
-      addUpdate(formData);
+      await addUpdate(formData);
+      toast({ title: 'Atualização adicionada', description: 'A nova atualização foi publicada com sucesso.' });
     } else {
-      addTicket(formData, openForm);
+      await addTicket(formData, openForm, file);
+      toast({ title: 'Ticket criado', description: 'O teu pedido foi recebido e registado.' });
     }
   };
 
@@ -70,22 +74,25 @@ const UpdatesPage = () => {
 
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors mb-6"
+            className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors mb-5"
           >
             <ChevronLeft className="w-4 h-4" />
             Voltar
           </button>
 
-          <h1 className="text-3xl font-bold text-white mb-2">Central de Atualizações</h1>
-          <p className="text-slate-400 text-sm mb-6 max-w-2xl">
-            Acompanhe atualizações do sistema, reporte dificuldades, peça ajuda e envie sugestões de melhoria.
-          </p>
-
-          <div className="mb-6">
-            <ActionButtons onOpen={(key) => setOpenForm(key)} />
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Central de Atualizações</h1>
+              <p className="text-slate-400 text-sm max-w-2xl leading-relaxed">
+                Acompanhe atualizações do sistema, reporte dificuldades, peça ajuda e envie sugestões de melhoria.
+              </p>
+            </div>
+            <div className="shrink-0 pt-0.5">
+              <ActionButtons onOpen={(key) => setOpenForm(key)} />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6">
             {stats.map((s) => (
               <StatCard key={s.label} label={s.label} value={s.value} />
             ))}
@@ -115,7 +122,7 @@ const UpdatesPage = () => {
             <div className="flex justify-end mb-4">
               <button
                 onClick={() => setOpenForm(activeTab === 'atualizacoes' ? 'atualizacao' : 'futuro')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
               >
                 + {activeTab === 'atualizacoes' ? 'Adicionar Atualização' : 'Adicionar ao Futuro'}
               </button>
@@ -147,7 +154,14 @@ const UpdatesPage = () => {
           </footer>
         </div>
 
-        <TicketDetailModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+        <TicketDetailModal
+          ticket={selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          onStatusChange={updateTicketStatus}
+          onFetchComments={fetchComments}
+          onAddComment={addComment}
+          onDelete={deleteTicket}
+        />
         <FormModal type={openForm} onClose={() => setOpenForm(null)} onSubmit={handleSubmit} />
       </div>
     </>

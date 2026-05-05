@@ -42,6 +42,7 @@ export default function SubempreiteirosSection({ subempreiteirosData = [], loadi
         />
       </div>
       <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
         <Table>
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent">
@@ -102,6 +103,7 @@ export default function SubempreiteirosSection({ subempreiteirosData = [], loadi
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

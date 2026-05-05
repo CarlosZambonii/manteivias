@@ -36,6 +36,7 @@ export default function UtilizacaoSection({ utilizacaoData = [], loading }) {
         />
       </div>
       <div className="overflow-x-auto">
+        <div className="min-w-[440px]">
         <Table>
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent">
@@ -97,6 +98,7 @@ export default function UtilizacaoSection({ utilizacaoData = [], loading }) {
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

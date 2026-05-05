@@ -19,13 +19,13 @@ function StatCard({ label, value, icon, loading }) {
     );
   }
   return (
-    <div className="bg-card rounded-xl border border-border/60 p-5 flex items-start gap-4 hover:border-primary/30 transition-colors">
-      <div className="p-2.5 rounded-lg bg-primary/10">
-        <Icon className="w-5 h-5 text-primary" />
+    <div className="bg-card rounded-xl border border-border/60 p-3 sm:p-5 flex items-start gap-3 sm:gap-4 hover:border-primary/30 transition-colors">
+      <div className="p-2 sm:p-2.5 rounded-lg bg-primary/10 shrink-0">
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
       </div>
-      <div>
-        <p className="text-2xl font-bold text-foreground">{value.toLocaleString("pt-PT")}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+      <div className="min-w-0">
+        <p className="text-xl sm:text-2xl font-bold text-foreground">{value.toLocaleString("pt-PT")}</p>
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 leading-tight">{label}</p>
       </div>
     </div>
   );
@@ -117,7 +117,7 @@ function RankedListBlock({ title, allItems, columns, metricOptions, loading }) {
 export default function VisaoGeral({ statsCards, topCollaborators, topObras, topPages, loading }) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
         {statsCards.map((card, i) => (
           <StatCard key={i} {...card} loading={loading} />
         ))}

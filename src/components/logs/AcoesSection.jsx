@@ -29,6 +29,7 @@ export default function AcoesSection({ acoesData = [], loading, search = '' }) {
         <CategoriaFilter value={categoria} onChange={setCategoria} />
       </div>
       <div className="overflow-x-auto">
+        <div className="min-w-[720px]">
         <Table>
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent">
@@ -77,6 +78,7 @@ export default function AcoesSection({ acoesData = [], loading, search = '' }) {
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

@@ -37,6 +37,7 @@ export default function ObrasSection({ obrasData = [], loading }) {
         />
       </div>
       <div className="overflow-x-auto">
+        <div className="min-w-[520px]">
         <Table>
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent">
@@ -97,6 +98,7 @@ export default function ObrasSection({ obrasData = [], loading }) {
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
 
   return (
     <div className="bg-card rounded-xl border border-border/60 p-4 mb-5">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
         <Select value={filters.obra_id || 'todas'} onValueChange={(v) => set('obra_id', v)}>
           <SelectTrigger className="w-full sm:w-44 bg-secondary border-border/60 text-sm h-9">
             <SelectValue placeholder="Obra" />
@@ -61,7 +61,7 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
           </SelectContent>
         </Select>
 
-        <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
+        <div className="relative col-span-2 sm:flex-1 sm:min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar utilizador..."
@@ -71,10 +71,10 @@ export default function LogsFilters({ obras = [], filters, onFiltersChange, load
           />
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="col-span-2 sm:col-span-1 sm:ml-auto">
           <Button
             variant="outline" size="sm"
-            className="h-9 gap-2 border-border/60 text-muted-foreground hover:text-foreground"
+            className="w-full sm:w-auto h-9 gap-2 border-border/60 text-muted-foreground hover:text-foreground"
             onClick={onRefresh}
             disabled={loading}
           >

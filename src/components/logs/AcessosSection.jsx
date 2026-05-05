@@ -22,6 +22,7 @@ export default function AcessosSection({ acessosData = [], loading, search = '' 
         <CategoriaFilter value={categoria} onChange={setCategoria} />
       </div>
       <div className="overflow-x-auto">
+        <div className="min-w-[640px]">
         <Table>
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent">
@@ -82,6 +83,7 @@ export default function AcessosSection({ acessosData = [], loading, search = '' 
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

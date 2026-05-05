@@ -1,8 +1,9 @@
 import React from "react";
-import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2, HardHat } from "lucide-react";
+import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2, HardHat, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
+  { id: "hoje", label: "Hoje — Tempo Real", icon: Radio, live: true },
   { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
   { id: "acessos", label: "Acessos", icon: LogIn },
   { id: "acoes", label: "Ações", icon: MousePointerClick },
@@ -27,11 +28,18 @@ export default function LogsSidebar({ activeSection, onSectionChange }) {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-primary/10 text-primary border border-primary/20"
+                    ? item.live
+                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30"
+                      : "bg-primary/10 text-primary border border-primary/20"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                 )}
               >
-                <Icon className={cn("w-4 h-4", isActive && "text-primary")} />
+                <div className="relative shrink-0">
+                  <Icon className={cn("w-4 h-4", isActive && (item.live ? "text-emerald-500" : "text-primary"))} />
+                  {item.live && (
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
+                </div>
                 {item.label}
               </button>
             );
