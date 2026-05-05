@@ -3,6 +3,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useAutoCloseRecords } from '@/hooks/useAutoCloseRecords';
 import { useAuth } from '@/contexts/AuthContext';
+import { useShiftAlertScheduler } from '@/hooks/useShiftAlertScheduler';
 import { useExtraShiftNotificationScheduler } from '@/hooks/ExtraShiftNotificationScheduler';
 
 const TimeContext = createContext(null);
