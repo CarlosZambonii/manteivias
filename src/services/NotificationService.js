@@ -104,14 +104,16 @@ export const registerPushSubscription = async (dbUserId = null) => {
 
     const subJson = subscription.toJSON();
 
-    // Persist subscription in Supabase
-    const { error } = await supabase.from('push_subscriptions').upsert({
-      user_id: userId,
-      endpoint: subJson.endpoint,
-      p256dh: subJson.keys.p256dh,
-      auth: subJson.keys.auth,
-      user_agent: navigator.userAgent
-    }, { onConflict: 'endpoint' });
+    // Persist subscription via edge function (bypasses RLS)
+    const { error } = await supabase.functions.invoke('register-push-subscription', {
+      body: {
+        user_id: userId,
+        endpoint: subJson.endpoint,
+        p256dh: subJson.keys.p256dh,
+        auth: subJson.keys.auth,
+        user_agent: navigator.userAgent,
+      },
+    });
 
     if (error) throw error;
     

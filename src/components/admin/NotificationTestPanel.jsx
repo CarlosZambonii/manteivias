@@ -264,15 +264,11 @@ const NotificationTestPanel = () => {
                     if (existing) await existing.unsubscribe();
                     const sub = await sw.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
 
-                    // Passo 3: guardar na BD
+                    // Passo 3: guardar na BD via edge function (bypassa RLS)
                     const j = sub.toJSON();
-                    const { error: dbError } = await supabase.from('push_subscriptions').upsert({
-                      user_id: user?.id,
-                      endpoint: j.endpoint,
-                      p256dh: j.keys.p256dh,
-                      auth: j.keys.auth,
-                      user_agent: navigator.userAgent,
-                    }, { onConflict: 'endpoint' });
+                    const { error: dbError } = await supabase.functions.invoke('register-push-subscription', {
+                      body: { user_id: user?.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, user_agent: navigator.userAgent },
+                    });
                     if (dbError) throw new Error('Erro ao guardar na BD: ' + dbError.message);
 
                     toast({ title: 'Subscrição registada com sucesso' });
