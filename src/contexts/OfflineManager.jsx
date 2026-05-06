@@ -20,33 +20,48 @@ export const OfflineManagerProvider = ({ children }) => {
   const isIOS = isIOSSafari();
   
   const initialSyncRef = useRef(false);
+  // Debounce offline events: screen lock/unlock fires rapid offline+online pairs.
+  // We wait 2 s before committing to "offline" — if online fires first, cancel silently.
+  const offlineTimerRef = useRef(null);
+  const committedOfflineRef = useRef(false);
 
   useEffect(() => {
-    const handleOnline = () => {
-        setIsOnline(true);
-        toast({
-            title: "Online",
-            description: "A conexão foi restaurada.",
-            variant: "success",
-            duration: 3000
-        });
-        syncAll();
-    };
-    
     const handleOffline = () => {
-        setIsOnline(false);
-        toast({
+      clearTimeout(offlineTimerRef.current);
+      offlineTimerRef.current = setTimeout(() => {
+        if (!navigator.onLine) {
+          committedOfflineRef.current = true;
+          setIsOnline(false);
+          toast({
             title: "Offline",
             description: "Você está offline. As alterações serão salvas localmente.",
             variant: "destructive",
             duration: 5000
+          });
+        }
+      }, 2000);
+    };
+
+    const handleOnline = () => {
+      clearTimeout(offlineTimerRef.current);
+      setIsOnline(true);
+      if (committedOfflineRef.current) {
+        committedOfflineRef.current = false;
+        toast({
+          title: "Online",
+          description: "A conexão foi restaurada.",
+          variant: "success",
+          duration: 3000
         });
+        syncAll();
+      }
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
     return () => {
+      clearTimeout(offlineTimerRef.current);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

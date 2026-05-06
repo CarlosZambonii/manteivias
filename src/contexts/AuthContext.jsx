@@ -4,6 +4,19 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useOfflineManager } from '@/contexts/OfflineManager';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions'; // Import the new hook
 import { logAcesso } from '@/lib/logService';
+import { registerPushSubscription } from '@/services/NotificationService.js';
+import { isIOSSafari } from '@/utils/iosDetector';
+
+const tryRegisterPushSubscription = (userId) => {
+  if (
+    typeof Notification !== 'undefined' &&
+    Notification.permission === 'granted' &&
+    !isIOSSafari() &&
+    'serviceWorker' in navigator
+  ) {
+    registerPushSubscription(userId).catch(console.warn);
+  }
+};
 
 const AuthContext = createContext(null);
 
@@ -74,6 +87,7 @@ export const AuthProvider = ({ children }) => {
                     logAcesso(parsedUser);
                     if (parsedUser.id) {
                         refreshUserData(parsedUser.id).catch(console.warn);
+                        tryRegisterPushSubscription(parsedUser.id);
                     }
                 } catch (e) {
                     localStorage.removeItem('manteivias_user');
@@ -88,6 +102,7 @@ export const AuthProvider = ({ children }) => {
                 if (profile) {
                     fetchAndSetUser(profile);
                     logAcesso(profile);
+                    tryRegisterPushSubscription(profile.id);
                 }
             }
         } catch (e) {
@@ -134,6 +149,7 @@ export const AuthProvider = ({ children }) => {
       
       fetchAndSetUser(userProfile);
       logAcesso(userProfile);
+      tryRegisterPushSubscription(userProfile.id);
 
       if (offlineManager?.syncAll) {
           offlineManager.syncAll().catch(console.warn);

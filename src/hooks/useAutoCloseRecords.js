@@ -11,6 +11,7 @@ export const useAutoCloseRecords = () => {
 
   const checkAndAutoClose = useCallback(async (userId, isSessionActive = false) => {
     if (!userId) return { closedCount: 0 };
+    if (!navigator.onLine) return { closedCount: 0 };
 
     setIsClosing(true);
     setError(null);
@@ -106,11 +107,14 @@ export const useAutoCloseRecords = () => {
     } catch (err) {
       console.error("Auto-close error:", err);
       setError(err);
-      toast({
-        variant: "destructive",
-        title: "Erro no fecho automático",
-        description: "Não foi possível processar registos pendentes."
-      });
+      // Suppress toast for network errors (e.g. screen just unlocked, network unstable)
+      if (navigator.onLine) {
+        toast({
+          variant: "destructive",
+          title: "Erro no fecho automático",
+          description: "Não foi possível processar registos pendentes."
+        });
+      }
     } finally {
       setIsClosing(false);
     }

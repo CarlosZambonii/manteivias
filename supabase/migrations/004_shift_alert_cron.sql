@@ -10,6 +10,7 @@ CREATE INDEX IF NOT EXISTS idx_shift_alert_log_fired_at ON shift_alert_log (fire
 
 -- pg_cron: run shift-alert-cron every minute
 -- The Edge Function handles timezone (Europe/Lisbon) and returns fast when no alert matches.
+-- Uses the anon key (public by design) so Supabase JWT verification passes.
 SELECT cron.schedule(
   'shift-alert-cron',
   '* * * * *',
@@ -18,7 +19,7 @@ SELECT cron.schedule(
       url     := 'https://habwmiaiahevujwmfxoh.supabase.co/functions/v1/shift-alert-cron',
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)
+        'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhYndtaWFpYWhldnVqd21meG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3NDUyNzYsImV4cCI6MjA2ODMyMTI3Nn0.jeJhITobvRdgMOzgakHLAX_qaFkzTFXQyT9_y22eJ2Y'
       ),
       body    := '{}'::jsonb
     ) AS request_id;
