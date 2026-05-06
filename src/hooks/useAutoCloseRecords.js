@@ -1,20 +1,16 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { useToast } from '@/components/ui/use-toast';
 import { applyAutoCloseRules } from '@/utils/recordCascadeLogic';
 import { convertToRecordFormat } from '@/utils/recordTimeAssignment';
 
 export const useAutoCloseRecords = () => {
   const [isClosing, setIsClosing] = useState(false);
-  const [error, setError] = useState(null);
-  const { toast } = useToast();
 
   const checkAndAutoClose = useCallback(async (userId, isSessionActive = false) => {
     if (!userId) return { closedCount: 0 };
     if (!navigator.onLine) return { closedCount: 0 };
 
     setIsClosing(true);
-    setError(null);
     let closedCount = 0;
     const skippedRecords = [];
 
@@ -105,26 +101,16 @@ export const useAutoCloseRecords = () => {
       }
 
     } catch (err) {
-      console.error("Auto-close error:", err);
-      setError(err);
-      // Suppress toast for network errors (e.g. screen just unlocked, network unstable)
-      if (navigator.onLine) {
-        toast({
-          variant: "destructive",
-          title: "Erro no fecho automático",
-          description: "Não foi possível processar registos pendentes."
-        });
-      }
+      console.warn("Auto-close silently failed (likely network not ready):", err?.message || err);
     } finally {
       setIsClosing(false);
     }
 
-    return { isClosing, error, closedCount };
-  }, [toast]);
+    return { isClosing, closedCount };
+  }, []);
 
   return {
     checkAndAutoClose,
-    isClosing,
-    error
+    isClosing
   };
 };
