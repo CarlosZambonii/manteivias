@@ -33,9 +33,18 @@ export const useExtraShiftNotificationScheduler = (isClockedIn, activeRecord) =>
     // Initial check when the record is created or component mounts
     checkTime();
 
-    // Check every minute to catch when the time reaches 17:00
-    const intervalId = setInterval(checkTime, 60000);
-    
-    return () => clearInterval(intervalId);
+    // Align to the start of each clock minute so the 17:00 check never misses
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    let intervalId;
+    const timeoutId = setTimeout(() => {
+      checkTime();
+      intervalId = setInterval(checkTime, 60000);
+    }, msUntilNextMinute);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, [isClockedIn, activeRecord]);
 };

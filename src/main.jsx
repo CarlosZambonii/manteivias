@@ -11,7 +11,6 @@ import { TimeProvider } from '@/contexts/TimeContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { requestNotificationPermission } from '@/utils/NotificationPermissionManager';
-import { subscribeToNotifications, registerPushSubscription } from '@/services/NotificationService.js';
 import { isIOS } from '@/utils/iosDetector';
 
 // Register Service Worker and Request Notification Permissions
@@ -26,12 +25,7 @@ if ('serviceWorker' in navigator) {
         console.log('SW is active and ready.');
         // iOS requires permission from a user gesture — handled by IOSNotificationPrompt component
         if (!isIOS()) {
-          requestNotificationPermission().then(granted => {
-            if (granted) {
-              subscribeToNotifications(null);
-              registerPushSubscription();
-            }
-          });
+          requestNotificationPermission();
         }
       })
       .catch(registrationError => {

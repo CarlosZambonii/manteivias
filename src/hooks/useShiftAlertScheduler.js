@@ -18,7 +18,7 @@ const SHIFT_ALERTS = [
     hour: 12, minute: 0,
     tag: 'shift-alert-12pm',
     getNotification: (records) => {
-      const openManha = records.find(r => r.turno === 'Manha' && !r.hora_fim_real);
+      const openManha = records.find(r => (r.turno === 'Manhã' || r.turno === 'Manha') && !r.hora_fim_real);
       if (openManha)
         return { title: 'Turno da Manhã', body: 'Registre sua saída da manhã e entrada da tarde.' };
       return null;
@@ -28,7 +28,7 @@ const SHIFT_ALERTS = [
     hour: 13, minute: 0,
     tag: 'shift-alert-1pm',
     getNotification: (records) => {
-      const closedManha = records.find(r => r.turno === 'Manha' && r.hora_fim_real);
+      const closedManha = records.find(r => (r.turno === 'Manhã' || r.turno === 'Manha') && r.hora_fim_real);
       const hasTarde = records.find(r => r.turno === 'Tarde');
       if (closedManha && !hasTarde)
         return { title: 'Turno da Tarde', body: 'Não registrou entrada no turno da tarde.' };

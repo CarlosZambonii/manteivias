@@ -23,8 +23,8 @@ export const useAutoCloseNotificationManager = (userId) => {
           const newRecord = payload.new;
           
           if (
-            newRecord.status_validacao === 'Cancelado' || 
-            (newRecord.hora_fim_real && !oldRecord.hora_fim_real && newRecord.hora_fim_escolhido)
+            newRecord.status_validacao === 'Cancelado' ||
+            newRecord.status_validacao === 'Fechado Automaticamente'
           ) {
             // Simple heuristic to avoid spamming if multiple records close at once
             if (newRecord.id !== lastClosedRecordRef.current) {
