@@ -1,93 +1,81 @@
 export async function generatePDF(element, filename = "relatorio.pdf") {
-  const html2canvas = (await import("html2canvas")).default;
-  const { jsPDF } = await import("jspdf");
-
-  const restores = [];
-
-  // Remove margin:auto so element sits at x=0 in its parent (avoids offset in capture)
-  const origMargin = element.style.margin;
-  element.style.margin = "0";
-  restores.push(() => { element.style.margin = origMargin; });
-
-  // Walk ancestors: remove scale transform and unclip overflow containers
-  let el = element.parentElement;
-  while (el && el !== document.body) {
-    const cs = window.getComputedStyle(el);
-
-    if (cs.transform !== "none") {
-      const orig = { transform: el.style.transform, width: el.style.width };
-      // Give parent enough width so max-width content can render at full size
-      el.style.transform = "none";
-      el.style.width = "1400px";
-      restores.push(() => { el.style.transform = orig.transform; el.style.width = orig.width; });
+  // Collect all stylesheets from the page (includes Tailwind + app CSS)
+  const styleTexts = [];
+  for (const sheet of document.styleSheets) {
+    try {
+      styleTexts.push(
+        Array.from(sheet.cssRules).map(r => r.cssText).join("\n")
+      );
+    } catch (_) {
+      // Cross-origin sheet — import by URL
+      if (sheet.href) styleTexts.push(`@import url("${sheet.href}");`);
     }
+  }
 
-    if (["auto", "scroll", "hidden"].includes(cs.overflow) ||
-        ["auto", "scroll", "hidden"].includes(cs.overflowY)) {
-      const origScrollTop = el.scrollTop;
-      const orig = { overflow: el.style.overflow, overflowY: el.style.overflowY, height: el.style.height };
-      el.style.overflow = "visible";
-      el.style.overflowY = "visible";
-      el.style.height = "auto";
-      el.scrollTop = 0;
-      restores.push(() => {
-        el.style.overflow = orig.overflow;
-        el.style.overflowY = orig.overflowY;
-        el.style.height = orig.height;
-        el.scrollTop = origScrollTop;
-      });
+  const title = filename.replace(/\.pdf$/i, "");
+
+  const printWin = window.open(
+    "",
+    "_blank",
+    "width=1200,height=900,menubar=no,toolbar=no,location=no,status=no"
+  );
+
+  if (!printWin) {
+    alert(
+      "O browser bloqueou o popup.\nAtiva popups para este site e tenta novamente."
+    );
+    return;
+  }
+
+  printWin.document.open();
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <base href="${window.location.origin}/">
+  <style>
+    ${styleTexts.join("\n")}
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      box-sizing: border-box;
     }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+    @page {
+      size: A4 landscape;
+      margin: 8mm;
+    }
+  </style>
+</head>
+<body>${element.outerHTML}</body>
+</html>`);
+  printWin.document.close();
 
-    el = el.parentElement;
-  }
+  // Wait for images and fonts to load, then print
+  await new Promise(res => {
+    const ready = () => {
+      setTimeout(() => {
+        printWin.focus();
+        printWin.print();
+        // Give the print dialog time to appear before closing the window
+        setTimeout(() => {
+          try { printWin.close(); } catch (_) {}
+          res();
+        }, 1000);
+      }, 600);
+    };
 
-  // Reset window scroll so element's getBoundingClientRect().top is correct
-  const winScrollY = window.scrollY;
-  window.scrollTo(0, 0);
-
-  // Let the browser apply all the style changes before capturing
-  await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
-
-  let canvas;
-  try {
-    canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: "#ffffff",
-      logging: false,
-      width: element.scrollWidth,
-      height: element.scrollHeight,
-      scrollX: 0,
-      scrollY: 0,
-    });
-  } finally {
-    restores.forEach(r => r());
-    window.scrollTo(0, winScrollY);
-  }
-
-  // Build PDF in A4 landscape, slicing into pages
-  const pageW = 297;
-  const pageH = 210;
-  const imgW = canvas.width;
-  const imgH = canvas.height;
-
-  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  const pageHpx = Math.round((pageH / pageW) * imgW);
-
-  let yPx = 0;
-  let first = true;
-  while (yPx < imgH) {
-    if (!first) pdf.addPage();
-    first = false;
-    const sliceH = Math.min(pageHpx, imgH - yPx);
-    const slice = document.createElement("canvas");
-    slice.width = imgW;
-    slice.height = sliceH;
-    slice.getContext("2d").drawImage(canvas, 0, yPx, imgW, sliceH, 0, 0, imgW, sliceH);
-    pdf.addImage(slice.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pageW, (sliceH / imgW) * pageW);
-    yPx += pageHpx;
-  }
-
-  pdf.save(filename);
+    if (printWin.document.readyState === "complete") {
+      ready();
+    } else {
+      printWin.addEventListener("load", ready, { once: true });
+      // Fallback in case load event doesn't fire
+      setTimeout(ready, 2000);
+    }
+  });
 }

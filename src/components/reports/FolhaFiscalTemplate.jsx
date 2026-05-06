@@ -25,7 +25,8 @@ const WEEKDAY_LABELS = {
 };
 
 const CELL = {
-  border: "1px solid #9FA8B4",
+  borderRight: "1px solid #9FA8B4",
+  borderBottom: "1px solid #9FA8B4",
   padding: "1px 3px",
   fontSize: 8,
   verticalAlign: "middle",
@@ -85,8 +86,8 @@ export default function FolhaFiscalTemplate({ data, showAv = false }) {
         FOLHA FISCAL — {showAv ? "COM AV" : "SEM AV"}
       </div>
 
-      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <table style={{ borderCollapse: "collapse", tableLayout: "auto", width: "100%" }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", borderTop: "1px solid #9FA8B4", borderLeft: "1px solid #9FA8B4" }}>
+        <table style={{ borderCollapse: "separate", borderSpacing: 0, tableLayout: "auto", width: "100%" }}>
           <thead>
             <tr>
               <th style={{ ...TH_DARK, width: 130, textAlign: "left", paddingLeft: 4 }} rowSpan={2}>Nome</th>

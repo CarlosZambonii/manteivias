@@ -42,7 +42,8 @@ function isWeekend(year, month, day) {
 }
 
 const CELL = {
-  border: "1px solid #9FA8B4",
+  borderRight: "1px solid #9FA8B4",
+  borderBottom: "1px solid #9FA8B4",
   padding: "1px 2px",
   fontSize: 8,
   verticalAlign: "middle",
@@ -142,8 +143,8 @@ export default function FolhaPontoTemplate({ data, showAv = false }) {
 
       <Legenda />
 
-      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <table style={{ borderCollapse: "collapse", tableLayout: "fixed", width: "100%" }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", borderTop: "1px solid #9FA8B4", borderLeft: "1px solid #9FA8B4" }}>
+        <table style={{ borderCollapse: "separate", borderSpacing: 0, tableLayout: "fixed", width: "100%" }}>
           <colgroup>
             <col style={{ width: 22 }} />
             <col style={{ width: 160 }} />
