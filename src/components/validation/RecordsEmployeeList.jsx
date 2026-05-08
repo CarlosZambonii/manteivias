@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, User, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, Clock, AlertTriangle, CheckCheck } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ const groupRecords = (records, searchFilter, shiftFilter) => {
   });
 };
 
-const EmployeeRow = ({ group, onUpdateRecord, onDeleteRecord }) => {
+const EmployeeRow = ({ group, onUpdateRecord, onDeleteRecord, onBulkApprove }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Group user records by Date
@@ -81,9 +81,28 @@ const EmployeeRow = ({ group, onUpdateRecord, onDeleteRecord }) => {
         </div>
         <div className="flex items-center gap-3">
             {group.pendingCount > 0 && (
+              <>
                 <Badge variant="warning" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-0">
                     {group.pendingCount} Pendente(s)
                 </Badge>
+                {onBulkApprove && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs border-green-200 text-green-700 hover:bg-green-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const pending = group.records.filter(
+                        r => r.status_validacao === 'Pendente' || r.status_validacao === 'Fechado Automaticamente'
+                      );
+                      onBulkApprove(pending);
+                    }}
+                  >
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    Aprovar todos
+                  </Button>
+                )}
+              </>
             )}
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -133,9 +152,9 @@ const EmployeeRow = ({ group, onUpdateRecord, onDeleteRecord }) => {
   );
 };
 
-const RecordsEmployeeList = ({ records, searchFilter, shiftFilter, onUpdateRecord, onDeleteRecord }) => {
-  const groupedData = useMemo(() => 
-    groupRecords(records, searchFilter, shiftFilter), 
+const RecordsEmployeeList = ({ records, searchFilter, shiftFilter, onUpdateRecord, onDeleteRecord, onBulkApprove }) => {
+  const groupedData = useMemo(() =>
+    groupRecords(records, searchFilter, shiftFilter),
   [records, searchFilter, shiftFilter]);
 
   if (groupedData.length === 0) {
@@ -150,11 +169,12 @@ const RecordsEmployeeList = ({ records, searchFilter, shiftFilter, onUpdateRecor
   return (
     <div className="space-y-3">
       {groupedData.map(group => (
-        <EmployeeRow 
-            key={group.user?.id || 'unknown'} 
-            group={group} 
+        <EmployeeRow
+            key={group.user?.id || 'unknown'}
+            group={group}
             onUpdateRecord={onUpdateRecord}
             onDeleteRecord={onDeleteRecord}
+            onBulkApprove={onBulkApprove}
         />
       ))}
     </div>

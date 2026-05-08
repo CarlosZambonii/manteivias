@@ -125,7 +125,7 @@ const RecordValidationCard = ({ record, onUpdateStatus, onDeleteSuccess }) => {
       });
 
       sendApprovalNotification(record.usuario_id, 'registo', status, comment);
-      onUpdateStatus({ ...record, status_validacao: status, rejection_comment: comment });
+      onUpdateStatus({ ...record, status_validacao: status, rejeicao_comentario: comment });
     } catch (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: t('records.updateError') });
     } finally {
@@ -236,9 +236,16 @@ const RecordValidationCard = ({ record, onUpdateStatus, onDeleteSuccess }) => {
           )}
 
           {!isPending && (
-            <Badge variant={record.status_validacao === 'Aprovado' ? 'success' : 'destructive'}>
-              {t(`status.${record.status_validacao}`) || record.status_validacao}
-            </Badge>
+            <div className="flex flex-col items-end gap-0.5">
+              <Badge variant={record.status_validacao === 'Aprovado' ? 'success' : 'destructive'}>
+                {t(`status.${record.status_validacao}`) || record.status_validacao}
+              </Badge>
+              {record.data_validacao && (
+                <span className="text-[10px] text-muted-foreground">
+                  {format(new Date(record.data_validacao), 'dd/MM HH:mm')}
+                </span>
+              )}
+            </div>
           )}
 
           {canAction && (

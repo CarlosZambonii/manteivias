@@ -4,6 +4,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, AlertCircle, RefreshCw, Download } from 'lucide-react';
+import { sendApprovalNotification } from '@/services/NotificationService';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Combobox } from '@/components/ui/combobox';
@@ -168,6 +169,28 @@ const RecordsValidationTab = ({ worksiteFilter }) => {
       setRecords(prev => prev.filter(r => r.id !== recordId));
   };
 
+  const handleBulkApprove = async (pendingRecords) => {
+    if (!pendingRecords?.length) return;
+    try {
+      for (const record of pendingRecords) {
+        await supabase.functions.invoke('update-record-status', {
+          body: { recordId: record.id, status: 'Aprovado', adminId: user.id, rejectionComment: '' },
+        });
+      }
+      const userId = pendingRecords[0]?.usuario_id;
+      if (userId) sendApprovalNotification(userId, 'registo', 'Aprovado');
+      const approvedIds = new Set(pendingRecords.map(r => r.id));
+      setRecords(prev =>
+        filters.status === 'Pendente'
+          ? prev.filter(r => !approvedIds.has(r.id))
+          : prev.map(r => approvedIds.has(r.id) ? { ...r, status_validacao: 'Aprovado' } : r)
+      );
+      toast({ variant: 'success', title: `${pendingRecords.length} registo(s) aprovado(s)` });
+    } catch {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao aprovar em massa.' });
+    }
+  };
+
   const handleExportXLSX = () => {
     if (!records || records.length === 0) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Não há dados para exportar.' });
@@ -271,6 +294,7 @@ const RecordsValidationTab = ({ worksiteFilter }) => {
           shiftFilter={filterShift}
           onUpdateRecord={handleUpdateRecord}
           onDeleteRecord={handleDeleteRecord}
+          onBulkApprove={handleBulkApprove}
         />
       )}
     </div>

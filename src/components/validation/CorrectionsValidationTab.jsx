@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import { sendApprovalNotification } from '@/services/NotificationService';
 import { RefreshCw, Download, AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
@@ -116,22 +117,37 @@ const CorrectionsValidationTab = ({ worksiteFilter }) => {
     fetchCorrections();
   }, [fetchCorrections]);
 
-  const handleUpdateStatus = async ({ id, status }) => {
+  const handleUpdateStatus = ({ id, status, rejeicao_comentario }) => {
+    setCorrections(prev => prev.map(c =>
+      c.id === id ? { ...c, status, ...(rejeicao_comentario !== undefined && { rejeicao_comentario }) } : c
+    ));
+  };
+
+  const handleBulkApprove = async (pendingCorrections) => {
+    if (!pendingCorrections?.length) return;
     try {
+      const ids = pendingCorrections.map(c => c.id);
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from('correcoes_ponto')
-        .update({
-          status,
-          validado_por: user.id,
-          data_validacao: new Date().toISOString()
-        })
-        .eq('id', id);
-
+        .update({ status: 'Aprovado', validado_por: user.id, data_validacao: now })
+        .in('id', ids);
       if (error) throw error;
-      setCorrections(prev => prev.map(c => c.id === id ? { ...c, status } : c));
-    } catch (err) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao atualizar correção.' });
-      fetchCorrections();
+
+      const registroIds = pendingCorrections.filter(c => c.registro_ponto_id).map(c => c.registro_ponto_id);
+      if (registroIds.length > 0) {
+        await supabase.from('registros_ponto').delete().in('id', registroIds);
+      }
+
+      const userId = pendingCorrections[0]?.usuario_id;
+      if (userId) sendApprovalNotification(userId, 'correcao', 'Aprovado');
+
+      setCorrections(prev => prev.map(c =>
+        ids.includes(c.id) ? { ...c, status: 'Aprovado', validado_por: user.id, data_validacao: now } : c
+      ));
+      toast({ variant: 'success', title: `${ids.length} correção(ões) aprovada(s)` });
+    } catch {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao aprovar em massa.' });
     }
   };
 
@@ -228,6 +244,7 @@ const CorrectionsValidationTab = ({ worksiteFilter }) => {
           corrections={corrections}
           searchQuery={searchQuery}
           onUpdateStatus={handleUpdateStatus}
+          onBulkApprove={handleBulkApprove}
         />
       )}
     </div>

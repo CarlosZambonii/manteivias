@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, AlertCircle, Check, X, User, Calendar, Download, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, User, Calendar, Download, RefreshCw, AlertTriangle } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { startOfMonth, endOfMonth, format, parseISO, addHours } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -41,6 +42,7 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
   });
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
+  const [confirmApproveId, setConfirmApproveId] = useState(null);
 
   const filterEmployeeId = filters.employeeId;
   const filterStatus = filters.status;
@@ -308,7 +310,7 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
                   <TableCell className="text-right">
                     {c.status === 'Pendente' && (
                       <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="success" onClick={() => handleUpdateStatus(c.id, 'Aprovado')} disabled={updatingId === c.id}>
+                        <Button size="sm" variant="success" onClick={() => setConfirmApproveId(c.id)} disabled={updatingId === c.id}>
                           {updatingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => handleUpdateStatus(c.id, 'Rejeitado')} disabled={updatingId === c.id}>
@@ -323,6 +325,29 @@ const MonthlyCorrectionsValidationTab = ({ worksiteFilter }) => {
           </Table>
         </div>
       )}
+
+      <AlertDialog open={!!confirmApproveId} onOpenChange={(open) => { if (!open) setConfirmApproveId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Confirmar Aprovação
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao aprovar esta correção mensal, o registo mensal original do colaborador será <strong>eliminado permanentemente</strong> e substituído pelos novos dados. Esta ação não pode ser revertida.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => { handleUpdateStatus(confirmApproveId, 'Aprovado'); setConfirmApproveId(null); }}
+            >
+              Confirmar Aprovação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

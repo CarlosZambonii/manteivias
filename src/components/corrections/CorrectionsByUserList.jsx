@@ -41,9 +41,9 @@ const groupCorrectionsByUser = (corrections, searchQuery) => {
   });
 };
 
-const CorrectionsByUserList = ({ corrections, searchQuery, onUpdateStatus }) => {
-  const groupedData = useMemo(() => 
-    groupCorrectionsByUser(corrections, searchQuery), 
+const CorrectionsByUserList = ({ corrections, searchQuery, onUpdateStatus, onBulkApprove }) => {
+  const groupedData = useMemo(() =>
+    groupCorrectionsByUser(corrections, searchQuery),
   [corrections, searchQuery]);
 
   if (groupedData.length === 0) {
@@ -59,10 +59,11 @@ const CorrectionsByUserList = ({ corrections, searchQuery, onUpdateStatus }) => 
   return (
     <div className="space-y-4">
       {groupedData.map(group => (
-        <CorrectionsByUserCard 
-            key={group.user?.id || 'unknown'} 
-            group={group} 
+        <CorrectionsByUserCard
+            key={group.user?.id || 'unknown'}
+            group={group}
             onUpdateStatus={onUpdateStatus}
+            onBulkApprove={onBulkApprove}
         />
       ))}
     </div>

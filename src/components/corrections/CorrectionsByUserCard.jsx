@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, CalendarDays } from 'lucide-react';
+import { ChevronDown, CalendarDays, CheckCheck } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ const getInitials = (name) => {
   return names.length > 1 ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase() : name[0].toUpperCase();
 };
 
-const CorrectionsByUserCard = ({ group, onUpdateStatus }) => {
+const CorrectionsByUserCard = ({ group, onUpdateStatus, onBulkApprove }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Group user corrections by Date
@@ -71,9 +71,26 @@ const CorrectionsByUserCard = ({ group, onUpdateStatus }) => {
              </div>
              <div className="flex items-center gap-3">
                 {group.pendingCount > 0 ? (
+                  <>
                     <Badge variant="warning" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 shadow-sm whitespace-nowrap">
                         Aguardando Validação
                     </Badge>
+                    {onBulkApprove && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs border-green-200 text-green-700 hover:bg-green-50 whitespace-nowrap"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const pending = group.corrections.filter(c => c.status === 'Pendente');
+                          onBulkApprove(pending);
+                        }}
+                      >
+                        <CheckCheck className="h-3 w-3 mr-1" />
+                        Aprovar todos
+                      </Button>
+                    )}
+                  </>
                 ) : (
                     <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200 shadow-sm whitespace-nowrap dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
                         Processado
