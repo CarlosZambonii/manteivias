@@ -18,7 +18,7 @@ import SubempreiteirosSection from "@/components/logs/SubempreiteirosSection";
 const sectionTitles = {
   "hoje": "Hoje — Tempo Real",
   "visao-geral": "Visão Geral",
-  "acessos": "Resumo Executivo",
+  "acessos": "Visão Executiva",
   "acoes": "Ações (Auditoria)",
   "utilizacao": "Utilização",
   "colaboradores": "Colaboradores",

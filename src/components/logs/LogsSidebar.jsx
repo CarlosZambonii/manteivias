@@ -1,11 +1,11 @@
 import React from "react";
-import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2, HardHat, Radio } from "lucide-react";
+import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2, HardHat, Radio, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
   { id: "hoje", label: "Hoje — Tempo Real", icon: Radio, live: true },
   { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
-  { id: "acessos", label: "Resumo Executivo", icon: LogIn },
+  { id: "acessos", label: "Visão Executiva", icon: LogIn },
   { id: "acoes", label: "Ações", icon: MousePointerClick },
   { id: "utilizacao", label: "Utilização", icon: BarChart3 },
   { id: "colaboradores", label: "Colaboradores", icon: Users },
@@ -45,6 +45,15 @@ export default function LogsSidebar({ activeSection, onSectionChange }) {
             );
           })}
         </nav>
+        <div className="mt-3 pt-3 border-t border-border/60">
+          <button
+            disabled
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
+          >
+            <FileText className="w-4 h-4 shrink-0" />
+            Relatório Mymanteivias
+          </button>
+        </div>
       </div>
     </aside>
   );
