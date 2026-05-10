@@ -14,6 +14,8 @@ import { sendApprovalNotification } from '@/services/NotificationService';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAvailableMonths } from '@/hooks/useAvailableMonths';
 import MonthMultiSelect from '@/components/ui/MonthMultiSelect';
+import EditJustificationModal from '@/components/justifications/EditJustificationModal';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const JustificationsValidationTab = ({ worksiteFilter }) => {
   const { user } = useAuth();
@@ -25,6 +27,9 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingJustification, setEditingJustification] = useState(null);
+  const [deletingJustification, setDeletingJustification] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [filters, setFilters] = useState({
     worksiteId: 'all',
@@ -164,6 +169,29 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
     }
   };
 
+  const handleEdit = (justification) => setEditingJustification(justification);
+
+  const handleDelete = (justification) => setDeletingJustification(justification);
+
+  const confirmDelete = async () => {
+    if (!deletingJustification) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('justificação')
+        .delete()
+        .eq('id', deletingJustification.id);
+      if (error) throw error;
+      toast({ title: 'Sucesso', description: 'Justificação apagada com sucesso.' });
+      setDeletingJustification(null);
+      fetchJustifications(true);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao apagar justificação: ' + error.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleExportXLSX = () => {
     if (!justifications || justifications.length === 0) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Não há dados para exportar.' });
@@ -190,6 +218,7 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
   ];
 
   return (
+    <>
     <div className="space-y-6">
       <div className="bg-card p-4 rounded-lg border shadow-sm space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -253,10 +282,39 @@ const JustificationsValidationTab = ({ worksiteFilter }) => {
           justifications={justifications}
           searchQuery={searchQuery}
           onUpdateStatus={handleUpdateStatus}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
           isLoading={false}
         />
       )}
     </div>
+
+      {editingJustification && (
+        <EditJustificationModal
+          isOpen={!!editingJustification}
+          onOpenChange={(open) => !open && setEditingJustification(null)}
+          justification={editingJustification}
+          onSuccess={() => { setEditingJustification(null); fetchJustifications(true); }}
+        />
+      )}
+
+      <AlertDialog open={!!deletingJustification} onOpenChange={(open) => !open && setDeletingJustification(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar justificação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é irreversível. A justificação será permanentemente removida.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+              {isDeleting ? 'A apagar...' : 'Apagar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

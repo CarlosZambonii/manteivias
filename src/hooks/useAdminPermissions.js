@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { MANAGED_ADMIN_TYPES } from '@/hooks/useAdminPermissionsManager';
 
 export const useAdminPermissions = () => {
     const { user, isAdminStar } = useAuth();
@@ -23,8 +24,8 @@ export const useAdminPermissions = () => {
             return;
         }
 
-        // Only admins need permissions checked against DB
-        if (user.tipo_usuario !== 'admin') {
+        // Only managed admin types need permissions checked against DB
+        if (!MANAGED_ADMIN_TYPES.includes(user.tipo_usuario)) {
              setPermissions({});
              setLoading(false);
              return;
@@ -52,7 +53,7 @@ export const useAdminPermissions = () => {
     useEffect(() => {
         fetchPermissions();
 
-        if (user && user.tipo_usuario === 'admin') {
+        if (user && MANAGED_ADMIN_TYPES.includes(user.tipo_usuario)) {
             // Subscribe to changes for this user's permissions
             channelRef.current = supabase
                 .channel(`admin_permissions:${user.id}`)
@@ -98,7 +99,7 @@ export const useAdminPermissions = () => {
     const hasPermission = (permissionName) => {
         if (!user) return false;
         if (isAdminStar) return true;
-        if (user.tipo_usuario !== 'admin') return false; 
+        if (!MANAGED_ADMIN_TYPES.includes(user.tipo_usuario)) return false;
 
         return !!permissions[permissionName];
     };

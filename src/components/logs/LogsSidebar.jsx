@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const menuItems = [
   { id: "hoje", label: "Hoje — Tempo Real", icon: Radio, live: true },
   { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
-  { id: "acessos", label: "Acessos", icon: LogIn },
+  { id: "acessos", label: "Resumo Executivo", icon: LogIn },
   { id: "acoes", label: "Ações", icon: MousePointerClick },
   { id: "utilizacao", label: "Utilização", icon: BarChart3 },
   { id: "colaboradores", label: "Colaboradores", icon: Users },

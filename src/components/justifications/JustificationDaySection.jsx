@@ -104,7 +104,7 @@ const AttachmentDialog = ({ url, t }) => {
 };
 
 const JustificationDaySection = ({ justification, onUpdateStatus, onEdit, onDelete }) => {
-  const { user, isReadOnlyAdmin } = useAuth();
+  const { user, isAdmin, isReadOnlyAdmin } = useAuth();
   const { t } = useLanguage();
   const [isRejecting, setIsRejecting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -226,7 +226,7 @@ const JustificationDaySection = ({ justification, onUpdateStatus, onEdit, onDele
 
       <CardFooter className="p-3 pt-0 flex justify-between gap-2 border-t mt-2">
         <div className="flex items-center gap-1.5">
-          {!isCancelled && justification.usuario_id === user?.id && (
+          {!isCancelled && (justification.usuario_id === user?.id || (isAdmin && !isReadOnlyAdmin)) && (
             <>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-blue-600" onClick={handleEditClick}>
                 <Edit className="h-3.5 w-3.5" />

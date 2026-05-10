@@ -36,7 +36,7 @@ const TestPanelPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Painel de Teste</title>
+        <title>Painel de Notificações</title>
         <meta name="description" content="Painel para testar notificações." />
       </Helmet>
       <div className="container mx-auto py-4">

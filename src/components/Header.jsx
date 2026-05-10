@@ -171,7 +171,7 @@ const Header = () => {
                 {isAdminStar && (
                   <DropdownMenuItem onSelect={() => navigate('/test-panel')} className="gap-2">
                     <FlaskConical className="w-4 h-4" />
-                    Painel de Testes
+                    Painel de Notificações
                   </DropdownMenuItem>
                 )}
                 {(canViewValidations || canViewFleets || canViewOrganizational || canViewDataAnalysis || isAdminStar) && <DropdownMenuSeparator />}

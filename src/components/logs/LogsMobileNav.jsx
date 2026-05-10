@@ -5,7 +5,7 @@ import { LayoutDashboard, LogIn, MousePointerClick, BarChart3, Users, Building2,
 const menuItems = [
   { id: "hoje", label: "Hoje — Tempo Real", icon: Radio },
   { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
-  { id: "acessos", label: "Acessos", icon: LogIn },
+  { id: "acessos", label: "Resumo Executivo", icon: LogIn },
   { id: "acoes", label: "Ações", icon: MousePointerClick },
   { id: "utilizacao", label: "Utilização", icon: BarChart3 },
   { id: "colaboradores", label: "Colaboradores", icon: Users },

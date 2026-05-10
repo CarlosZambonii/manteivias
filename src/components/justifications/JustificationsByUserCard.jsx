@@ -16,7 +16,7 @@ const getInitials = (name) => {
   return names.length > 1 ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase() : name[0].toUpperCase();
 };
 
-const JustificationsByUserCard = ({ group, onUpdateStatus }) => {
+const JustificationsByUserCard = ({ group, onUpdateStatus, onEdit, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Group justifications by Date (start date) for display
@@ -105,10 +105,12 @@ const JustificationsByUserCard = ({ group, onUpdateStatus }) => {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                                     {justifications.map(justification => (
-                                        <JustificationDaySection 
-                                            key={justification.id} 
-                                            justification={justification} 
+                                        <JustificationDaySection
+                                            key={justification.id}
+                                            justification={justification}
                                             onUpdateStatus={onUpdateStatus}
+                                            onEdit={onEdit}
+                                            onDelete={onDelete}
                                         />
                                     ))}
                                 </div>

@@ -40,7 +40,7 @@ const groupJustificationsByUser = (justifications, searchQuery) => {
   });
 };
 
-const JustificationsByUserList = ({ justifications, searchQuery = '', onUpdateStatus, isLoading }) => {
+const JustificationsByUserList = ({ justifications, searchQuery = '', onUpdateStatus, onEdit, onDelete, isLoading }) => {
   const groupedData = useMemo(() => 
     groupJustificationsByUser(justifications, searchQuery), 
   [justifications, searchQuery]);
@@ -86,9 +86,11 @@ const JustificationsByUserList = ({ justifications, searchQuery = '', onUpdateSt
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.2 }}
             >
-                <JustificationsByUserCard 
-                    group={group} 
+                <JustificationsByUserCard
+                    group={group}
                     onUpdateStatus={onUpdateStatus}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                 />
             </motion.div>
         ))}

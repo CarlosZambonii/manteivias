@@ -281,7 +281,7 @@ const UserDataTable = ({ filterCompany, filterMode = 'include', excludeRole }) =
                             <Edit className="mr-2 h-4 w-4" />Editar
                           </DropdownMenuItem>
 
-                          {isAdminStar && user.tipo_usuario === 'admin' && (
+                          {isAdminStar && ['admin', 'admin_sub', 'admin_c'].includes(user.tipo_usuario) && (
                             <DropdownMenuItem onSelect={() => setManagingPermissionsFor(user)}>
                               <ShieldCheck className="mr-2 h-4 w-4" />Gerir Permissões
                             </DropdownMenuItem>
@@ -315,7 +315,7 @@ const UserDataTable = ({ filterCompany, filterMode = 'include', excludeRole }) =
                                   <Edit className="mr-2 h-4 w-4" />Editar
                                 </DropdownMenuItem>
 
-                                {isAdminStar && user.tipo_usuario === 'admin' && (
+                                {isAdminStar && ['admin', 'admin_sub', 'admin_c'].includes(user.tipo_usuario) && (
                                     <DropdownMenuItem onSelect={() => setManagingPermissionsFor(user)}>
                                       <ShieldCheck className="mr-2 h-4 w-4" />Gerir Permissões
                                     </DropdownMenuItem>
